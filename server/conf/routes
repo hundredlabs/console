@@ -1,0 +1,277 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+#All the proxy routes
+GET         /proxy/spark/*path                   web.controllers.proxy.SparkProxyController.master(path: String)
+
+#Spark cluster
++ nocsrf
+PUT        /web/v1/spark-cluster                                 web.controllers.read.ClusterController.saveLocalSparkClusterConfig
+GET        /web/v1/spark/:clusterId/redirect/*path               web.controllers.spark.SparkClusterController.proxyHistoryUI(clusterId: Long, path: String)
+GET        /web/v1/spark/:clusterId/history/*path                web.controllers.spark.SparkClusterController.proxyHistoryAPI(clusterId: Long, path: String)
+GET        /web/v1/spark/:clusterId/master/version/:version      web.controllers.spark.SparkClusterController.proxyMasterUI(clusterId: Long, version: String)
+GET        /web/v1/spark/:clusterId                              web.controllers.read.ClusterController.fetchSparkCluster(clusterId: Long)
+GET        /ws/spark/:clusterId                                  web.controllers.read.ClusterController.streamClusterMetrics(clusterId: Long)
+
+#Kafka Cluster
++ nocsrf
+PUT        /web/v1/kafka-cluster                                web.controllers.kafka.KafkaClusterController.saveLocalKafkaClusterConfig
+GET        /web/v1/kafka/:clusterId                             web.controllers.kafka.KafkaClusterController.fetchKafkaCluster(clusterId: Long)
+GET        /ws/kafka/:clusterId                                 web.controllers.kafka.KafkaClusterController.streamKafkaClusterState(clusterId: Long)
+GET        /web/v1/kafka/:clusterId/topics                      web.controllers.kafka.KafkaClusterController.listTopics(clusterId: Long)
+GET        /web/v1/kafka/:clusterId/nodes                       web.controllers.kafka.KafkaClusterController.listBrokers(clusterId: Long)
++ nocsrf
+PUT        /web/v1/kafka/:clusterId/topics                      web.controllers.kafka.KafkaClusterController.createTopic(clusterId: Long)
+GET        /web/v1/kafka/:clusterId/topics/:topic/partitions    web.controllers.kafka.KafkaClusterController.listTopicPartitions(clusterId: Long, topic: String)
+GET        /web/v1/kafka/:clusterId/topics/:topic/messages      web.controllers.kafka.KafkaClusterController.listTopicMessages(clusterId: Long, topic: String)
+GET        /web/v1/kafka/:clusterId/topics/:topic/configs      web.controllers.kafka.KafkaClusterController.listTopicConfigurations(clusterId: Long, topic: String)
+
+#HDFS Cluster
++ nocsrf
+PUT        /web/v1/hdfs-cluster                                 web.controllers.hdfs.HDFSController.saveLocalHDFSClusterConfig
+GET        /ws/hadoop/:clusterId                                 web.controllers.hdfs.HDFSController.streamHDFSClusterState(clusterId: Long)
+GET        /web/v1/hadoop/:clusterId                             web.controllers.hdfs.HDFSController.fetchHDFSCluster(clusterId: Long)
+GET        /web/v1/hadoop/:clusterId/webhdfs/v1/*path            web.controllers.hdfs.HDFSController.proxyWebHDFS(clusterId: Long, path: String)
++ nocsrf
+PUT        /web/v1/hadoop/:clusterId/webhdfs/v1/*path            web.controllers.hdfs.HDFSController.proxyModifyWebHDFS(clusterId: Long, path: String)
++ nocsrf
+DELETE     /web/v1/hadoop/:clusterId/webhdfs/v1/*path            web.controllers.hdfs.HDFSController.proxyDelFileWebHDFS(clusterId: Long, path: String)
+
+#Common cluster Web APIs
++ nocsrf
+POST        /web/v1/clusters/:clusterId/services/:service/start     web.controllers.read.ClusterController.startCluster(service: String, clusterId: Long)
++ nocsrf
+POST        /web/v1/clusters/:clusterId/stop                        web.controllers.read.ClusterController.stopCluster(clusterId: Long)
+
+PUT         /web/betaregister                    web.controllers.auth.AuthController.betaSignup
++ nocsrf
+POST        /web/signin                          web.controllers.auth.AuthController.signIn
++ nocsrf
+POST        /web/desktop-signin                  web.controllers.auth.AuthController.desktopSignIn
+GET         /desktop/token                       web.controllers.auth.MemberController.getDesktopToken
+GET         /web/activate/:code                  web.controllers.auth.AuthController.getEmail(code: String)
+GET         /web/signout                         web.controllers.auth.AuthController.signOut
+GET         /web/account                         web.controllers.auth.MemberController.accountDetails
+GET         /web/requests                        web.controllers.auth.AuthController.memberApiStatus
+GET         /web/hello                           web.controllers.auth.AdminController.hello
+GET         /web/v1/orgs                         web.controllers.auth.MemberController.listOrgsWithKeys
+GET         /web/authenticate/:provider          web.controllers.read.SocailAuthController.authenticateWithSocial(provider: String)
+GET         /web/confirm-email/:token            web.controllers.auth.AuthController.confirmEmail(token: String)
++ nocsrf
+POST        /web/v1/notify-feature               web.controllers.read.WorkspaceController.notifyMember
+
+#Orgs
++ nocsrf
+POST        /web/v1/orgs/                        web.controllers.auth.MemberController.createOrg
+POST        /web/v1/workspace                    web.controllers.read.WorkspaceController.createWorkspace
+GET         /web/v1/workspaces                   web.controllers.read.WorkspaceController.listWorkspaces
+
++ nocsrf
+POST        /web/v1/onboard                         web.controllers.read.WorkspaceController.onboardMember
+
+#Secrets
+GET         /web/secrets/pub-key                                                      web.controllers.read.SecretsController.getPubKey
+GET         /web/v1/secrets/generate/integration/:integration                         web.controllers.read.SecretsController.generateIntegrationKey(integration: String)
+GET         /web/v1/secrets/integration/:cloudProvider/region/:region                 web.controllers.read.SecretsController.listAllClusters(cloudProvider: String, region: String)
++ nocsrf
+POST        /web/v1/secrets/integration/aws                                           web.controllers.read.SecretsController.validateAndFetchEMRClusters
+GET         /web/v1/clusters/provider/:integration/regions                            web.controllers.read.SecretsController.listRegions(integration: String)
+
+
+GET         /web/keys/generate                                                        web.controllers.read.SecretsController.generateKeyPair
++ nocsrf
+POST        /web/v1/name                                                              web.controllers.auth.MemberController.changeName
++ nocsrf
+POST        /web/v1/password                                                          web.controllers.auth.MemberController.changePassword
+
++ nocsrf
+POST        /web/access-request                            web.controllers.auth.AuthController.accessRequest
+POST        /web/alpha-request                             web.controllers.auth.AuthController.alphaRequest
++ nocsrf
+POST        /web/admin/list-alpha-requests                 web.controllers.auth.AdminController.listAlphaRequests
++ nocsrf
+POST        /web/admin/approve-request                     web.controllers.auth.AdminController.approveAccessRequest
++ nocsrf
+POST        /web/list-approved-requests                    web.controllers.auth.AdminController.listApprovedRequests
+GET         /web/admin/test-mail                           web.controllers.auth.AdminController.sendTestMail
+
+#Web Alerting rules( Removed)
+
+GET         /web/v1/jobs/:projectId                         web.controllers.read.JobReadController.getJobSummary(projectId: Long)
+GET         /web/v1/jobs/:jobId/history                     web.controllers.read.JobReadController.getJobRunHistory(jobId: Long)
+GET         /web/v1/jobs/type/spark                         web.controllers.read.SparkWebController.listComparableSparkApps
+GET         /web/v1/jobs/:jobId/runs                        web.controllers.read.JobReadController.listJobRuns(jobId: Long)
++ nocsrf
+POST        /web/v1/jobs/:jobId/description                 web.controllers.read.JobReadController.updateDescription(jobId: Long)
++ nocsrf
+PUT         /web/v1/jobs/:jobId/cluster/:clusterId/add-deployment                              web.controllers.read.JobReadController.addDeploymentConfig(jobId: Long, clusterId: Long)
+
+#Spark executors info
+GET         /web/v1/spark/jobs/:jobId/runs/:runId/attempt/:attemptId/executors-overview       web.controllers.read.SparkWebController.getExecutionSummary(jobId: Long, runId: Long, attemptId: String)
+GET         /web/v1/spark/jobs/:jobId/runs/:runId/attempt/:attemptId/worker/:workerId         web.controllers.read.SparkWebController.getWorkerMetrics(jobId: Long, runId: Long, attemptId: String, workerId: String)
+
+
+#Web API for accessing the job stats
+GET         /web/v1/jobs                                                                 web.controllers.read.JobReadController.listJobs
+GET         /web/v1/jobs/:id/runs/:runId                                                 web.controllers.read.JobReadController.getJobRunDetail(id: Long, runId: Long)
+GET         /web/v1/jobs/:id/runs/:runId/spark-task                                      web.controllers.read.JobReadController.getSparkTask(id: Long, runId: Long)
+GET         /web/v1/logs/:jobId/runs/:runId                                              web.controllers.read.JobReadController.getSparkLogs(jobId: Long, runId: Long)
+GET         /web/v1/jobs/:jobId/runs/:runId/attempt/:attemptId/errors                    web.controllers.read.SparkWebController.getJobRunErrors(jobId: Long, runId: Long, attemptId: String)
+
+#Web socket requests for Spark dashboard
+GET         /ws/projects/:projectId/runs/:runId/attempts/:attemptId/aggregate-metrics                                     web.controllers.read.SparkWebController.streamAggregateMetrics(projectId: Long, runId: Long, attemptId: String)
+GET         /ws/projects/:projectId/runs/:runId/attempts/:attemptId/overview-metrics                                      web.controllers.read.SparkWebController.streamAppOverview(projectId: Long, runId: Long, attemptId: String)
+GET         /ws/projects/:projectId/runs/:runId/attempts/:attemptId/start/:startTime/end/:endTime/job-metrics             web.controllers.read.SparkWebController.streamJobMetrics(projectId: Long, runId: Long, attemptId: String,startTime: Long, endTime: Long)
+GET         /ws/projects/:projectId/runs/:runId/attempts/:attemptId/overview-cpu-usage                                    web.controllers.read.SparkWebController.streamCPUTimeSerie(projectId: Long, runId: Long, attemptId: String)
+GET         /ws/projects/:projectId/runs/:runId/attempts/:attemptId/overview-cores-usage                                  web.controllers.read.SparkWebController.streamCPUCoresTimeSerie(projectId: Long, runId: Long, attemptId: String)
+GET         /ws/projects/:projectId/runs/:runId/attempts/:attemptId/overview-mem-usage                                    web.controllers.read.SparkWebController.streamMemoryTimeserie(projectId: Long, runId: Long, attemptId: String)
+GET         /ws/projects/:projectId/runs/:runId/attempts/:attemptId/overview-heap-mem-usage                               web.controllers.read.SparkWebController.streamHeapMemoryTimeserie(projectId: Long, runId: Long, attemptId: String)
+GET         /ws/projects/:projectId/runs/:runId/attempts/:attemptId/overview-offheap-mem-usage                            web.controllers.read.SparkWebController.streamOffHeapMemoryTimeserie(projectId: Long, runId: Long, attemptId: String)
+
++ nocsrf
+POST        /web/v1/jobs/spark/compare-runs                                              web.controllers.read.SparkWebController.compareJobRun
++ nocsrf
+POST        /web/v1/jobs/spark/overview                                                  web.controllers.read.SparkWebController.getOverview
++ nocsrf
+POST        /web/v1/jobs/spark/overview-cpu-usage                                        web.controllers.read.SparkWebController.getSparkCPUTimeserie
++ nocsrf
+POST        /web/v1/jobs/spark/overview-mem-usage                                        web.controllers.read.SparkWebController.getSparkMemoryTimeserie
++ nocsrf
+POST        /web/v1/jobs/spark/overview-heap-mem-usage                                   web.controllers.read.SparkWebController.getSparkHeapMemoryTimeserie
++ nocsrf
+POST        /web/v1/jobs/spark/overview-offheap-mem-usage                                web.controllers.read.SparkWebController.getSparkOffHeapMemoryTimeserie
++ nocsrf
+POST        /web/v1/jobs/spark/overview-cores-usage                                      web.controllers.read.SparkWebController.getSparkCoreTimeserie
++ nocsrf
+POST        /web/v1/jobs/spark/stage-summary                                             web.controllers.read.SparkWebController.getSparkStageSummary
++ nocsrf
+POST        /web/v1/jobs/spark/rutime-observations                                       web.controllers.read.SparkWebController.getRuntimeObservations
+
+# Executor summaries
+GET         /web/v1/jobs/:jobId/runs/:runId/app-attempt/:attemptId/executors                web.controllers.read.JobReadController.getExecutorMetrics(jobId: Long,runId: Long, attemptId: String)
+GET         /web/v1/jobs/:jobId/runs/:runId/executor-summary                                web.controllers.read.JobReadController.listExecutorSummaries(jobId: Long,runId: Long)
+GET         /web/v1/jobs/:jobId/runs/:runId/executor/:executorId/metrics                    web.controllers.read.JobReadController.getExecutorRuntimeMetrics(jobId: Long,runId: Long, executorId: String)
++ nocsrf
+POST       /web/v1/logs/:jobId/runs/:runId                                  web.controllers.read.JobReadController.searchSparkLogs(jobId: Long, runId: Long)
++ nocsrf
+DELETE      /web/v1/jobs/:id                                                web.controllers.read.JobReadController.deleteJob(id: Long)
++ nocsrf
+POST        /web/v1/jobs/:jobId                                             web.controllers.read.JobReadController.updateProject(jobId: Long)
++ nocsrf
+POST        /web/v1/jobs/:jobId/history                                     web.controllers.read.JobReadController.getJobTaskHistory(jobId: Long)
+GET         /ws/run                                                         web.controllers.read.JobReadController.ws
+GET         /ws/agg-metrics                                                 web.controllers.read.JobReadController.wsSparkAggMetrics
+GET         /ws/job-metrics                                                web.controllers.read.JobReadController.wsSparkJobMetrics
+GET         /ws/stage-metrics                                              web.controllers.read.JobReadController.wsSparkStageMetrics
+GET         /ws/list-jobs                                                  web.controllers.read.JobReadController.wsJobList
+GET         /ws/executor-metrics                                           web.controllers.read.JobReadController.wsSparkExecutorMetrics
+GET         /ws/search-logs                                                web.controllers.read.JobReadController.wsSparkLogSearch
+GET         /ws/list-executor-metrics                                      web.controllers.read.JobReadController.wsSparkListExecutorMetrics
+GET         /ws/detailed-executor-metrics                                  web.controllers.read.JobReadController.wsSparkDetailedExecutorMetrics
+
+#API for launcher
+
+GET         /api/v1/org/login                                               web.controllers.auth.MemberController.fetchOrgDetails
+POST        /api/v1/login                                                  web.controllers.api.JobApiController.apiLogin
+POST        /api/v1/workspace/login                                        web.controllers.api.WorkspaceApiController.apiLogin
+POST        /api/v1/project                                                web.controllers.api.JobApiController.getProjectByName
+POST        /api/v1/jobs/:id                                               web.controllers.api.JobApiController.submitJob(id: Long)
+POST        /api/v1/jobs/:jobId/run/:runId                                 web.controllers.api.JobApiController.updateJobStatus(jobId: Long, runId: Long)
+POST        /api/v1/jobs/:jobId/run/:runId/task/:seqId                     web.controllers.api.JobApiController.updateTaskStatus(jobId: Long, runId: Long, seqId: Int)
+POST        /api/v1/jobs/:jobId/run/:runId/attempt/:attemptId/error        web.controllers.api.JobApiController.publishError(jobId: Long, runId: Long, attemptId: String)
+
+
+#API for fetching the spark events
+GET         /api/v1/spark/metrics/jobs/:jobId/run/:runId/app-attempt/:appAttemptId                              web.controllers.read.JobReadController.getSparkAggMetrics(jobId: Long, runId: Long, appAttemptId: String)
+GET         /api/v1/spark/metrics/jobs/:jobId/run/:runId                                                        web.controllers.read.JobReadController.getSparkAggMetricsAll(jobId: Long, runId: Long)
++ nocsrf
+POST         /api/v1/spark/job-metrics/jobs/:jobId/run/:runId/app-attempt/:appAttemptId                          web.controllers.read.SparkWebController.getSparkJobMetrics(jobId: Long, runId: Long, appAttemptId: String)
+GET         /api/v1/spark/stage-metrics/jobs/:jobId/run/:runId/app-attempt/:appAttemptId/spark-job/:sparkJobId  web.controllers.read.JobReadController.getSparkStageMetrics(jobId: Long, runId: Long, appAttemptId: String, sparkJobId: Int)
+
+#API for Spark events
+POST        /api/v1/spark/metrics                                           web.controllers.api.WorkspaceApiController.pushSparkMetrics
+
+POST        /api/v1/spark/executors                                         web.controllers.api.WorkspaceApiController.newSparkExecutorMetric
+POST        /api/v1/spark/logs                                              web.controllers.spark.SparkEventsController.saveDriverLogs
+POST        /api/v1/spark/app-status/run/:runId                             web.controllers.api.WorkspaceApiController.updateSparkAppStatus(runId: Long)
+
+#Deployments and Jobs Web API
++ nocsrf
+PUT         /web/v1/jobs/register                                                                    web.controllers.read.JobReadController.registerJob
++ nocsrf
+PUT         /web/v1/deployments/new                                                                  web.controllers.read.JobReadController.newDeploymentJob
+GET         /web/v1/deployments/:deploymentId                                                        web.controllers.read.JobReadController.getDeploymentConfig(deploymentId: Long)
++ nocsrf
+POST        /web/v1/deployments/web/v1/sandbox-cluster/:deploymentId/jobs/:jobId                                            web.controllers.read.DeploymentsWebController.updateDeployment(deploymentId: Long, jobId: Long)
++ nocsrf
+POST        /web/v1/deployments/:deploymentId/run                                                    web.controllers.read.DeploymentsWebController.runDeployment(deploymentId: Long)
+GET         /web/v1/deployments/:deploymentId/jobs/:jobId/history                                    web.controllers.read.DeploymentsWebController.getDeploymentRunHistory(jobId: Long, deploymentId: Long)
+GET         /web/v1/deployments/run/:deploymentRunId                                                 web.controllers.read.DeploymentsWebController.getDeploymentRunDetail(deploymentRunId: Long)
+GET         /ws/projects/:projectId/deployments/:deploymentRunId                                     web.controllers.read.DeploymentsWebController.streamDeploymentRunDetail(projectId: Long, deploymentRunId: Long)
+GET         /web/v1/jobs/:jobId/deployments                                                          web.controllers.read.DeploymentsWebController.listDeployments(jobId: Long)
+GET         /ws/projects/:projectId/deployments                                                      web.controllers.read.DeploymentsWebController.listDeploymentStream(projectId: Long)
++ nocsrf
+DELETE      /web/v1/jobs/:jobId/deployments/:deploymentId                                            web.controllers.read.DeploymentsWebController.deleteDeployment(jobId: Long, deploymentId: Long)
+GET         /web/v1/deployments/:deploymentRunId/projects/:projectId/actions/:actionName             web.controllers.read.DeploymentsWebController.getDeploymentActionLog(projectId: Long, deploymentRunId: Long, actionName: String)
+GET         /ws/deployments/:deploymentRunId/actions/:actionName/stream                              web.controllers.read.DeploymentsWebController.streamDeploymentActionLog(deploymentRunId: Long, actionName: String)
+
+#Deployments Client API
+#GET         /api/v1/deployments/:runId/clusters/:clusterId                                           web.controllers.api.DeploymentsController.getDeploymentConfig(clusterId: String, runId: Long)
+POST        /api/v1/deployments                                                                      web.controllers.api.WorkspaceApiController.updateDeploymentRun
+
+#Workspaces WEB APIs
+GET         /web/v1/workspaces/keys                                       web.controllers.read.WorkspaceController.listAPIKeys
+GET         /web/v1/workspace/hosts                                       web.controllers.read.WorkspaceController.listWorkspaceHosts
+
+#Clusters Web API
+GET         /web/v1/clusters/usage                                        web.controllers.read.WorkspaceController.getClusterUsage
+GET         /web/v1/sandbox-clusters                                      web.controllers.read.WorkspaceController.listSandboxVersions
+GET         /web/v1/packages/:name                                        web.controllers.read.WorkspaceController.fetchPackageVersions(name: String)
+
+
++ nocsrf
+PUT         /web/v1/sandbox-cluster                                       web.controllers.read.WorkspaceController.saveSandboxCluster
++ nocsrf
+POST        /web/v1/sandbox-cluster/:clusterId/status/:status             web.controllers.read.WorkspaceController.updateClusterStatus(clusterId: Long, status: String)
+GET         /web/v1/clusters/status/:status                               web.controllers.read.WorkspaceController.listWorkspaceClusters(status: String)
+GET         /web/v1/clusters/provider/:provider                           web.controllers.read.WorkspaceController.listWorkspaceClustersByProvider(provider: String)
+GET         /web/v1/clusters/:clusterId/deployment-history                web.controllers.read.WorkspaceController.listClusterDeployments(clusterId: Long)
+GET         /web/v1/clusters                                              web.controllers.read.WorkspaceController.listAllWorkspaceClusters
+GET         /web/v1/clusters/:clusterId/metrics                           web.controllers.read.WorkspaceController.fetchClusterMetrics(clusterId: Long)
+GET         /ws/v1/clusters/:clusterId/metrics                            web.controllers.read.WorkspaceController.streamClusterMetrics(clusterId: Long)
+
++ nocsrf
+PUT         /web/v1/clusters/new                                          web.controllers.read.WorkspaceController.newCluster
++ nocsrf
+DELETE      /web/v1/clusters/:clusterId                                   web.controllers.read.ClusterController.removeCluster(clusterId: Long)
+GET         /web/v1/clusters/:clusterId/deployments                       web.controllers.read.JobReadController.listDeploymentJobs(clusterId: Long)
++ nocsrf
+POST        /web/v1/clusters/verify                                       web.controllers.read.WorkspaceController.verifyCluster
++ nocsrf
+POST        /web/v1/org/upload-logo                                       web.controllers.read.WorkspaceController.uploadOrganisationLogo
+GET         /web/v1/org                                                   web.controllers.read.WorkspaceController.getOrgDetails
++ nocsrf
+POST        /web/v1/org                                                   web.controllers.read.WorkspaceController.updateOrg
+GET         /web/v1/org/usage/:date                                       web.controllers.read.WorkspaceController.getOrgUsage(date: String)
+GET         /web/v1/agents                                                web.controllers.read.AgentsWebController.listAgents
+GET         /web/v1/agents/status/:status                                 web.controllers.read.AgentsWebController.listAgentsWithStatus(status: String)
+
+# Cluster Remote API
+#+ nocsrf
+POST        /api/v1/deployments/logs                                     web.controllers.api.WorkspaceApiController.updateDeploymentLogs
+GET         /api/v1/clusters/:clusterId/deployment                       web.controllers.api.WorkspaceApiController.getDeploymentWork(clusterId: Long)
+POST        /api/v1/clusters                                             web.controllers.api.WorkspaceApiController.apiLogin
+PUT         /api/v1/clusters                                             web.controllers.api.WorkspaceApiController.registerCluster
+POST        /api/v1/clusters/state                                       web.controllers.api.WorkspaceApiController.saveClusterState
+POST        /api/v1/spark/runtime-metrics                                web.controllers.api.WorkspaceApiController.runtimeExecutorsMetric
+PUT         /api/v1/agents                                               web.controllers.api.ClusterController.registerAgent
+POST        /api/v1/agents/:agentId                                      web.controllers.api.ClusterController.updateAgentstatus(agentId: String)
+
+# Map static resources from the /public folder to the /assets URL path
+GET         /                                                            controllers.Assets.at(path="/public", file="index.html")
+GET         /manifest.json                                               controllers.Assets.at(path="/public", file="manifest.json")
+GET         /favicon.ico                                                 controllers.Assets.at(path="/public", file="favicon.ico")
+GET         /static/*file                                                controllers.Assets.at(path="/public/static", file)
+GET         /web/assets/img/*file                                        web.controllers.read.WorkspaceController.assetsAt(file: String)
+#->          /webjars                         webjars.Routes

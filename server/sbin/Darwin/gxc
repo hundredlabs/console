@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+GHX_HOME=${HOME}/gigahex
+VERSION=0.2.2
+PID_FILE=${GHX_HOME}/gigahex-server-$VERSION/RUNNING_PID
+OS="`uname`"
+green="\033[32m"
+red="\033[31m"
+reset="\033[0m"
+
+function usage()
+{
+    echo "Gigahex CLI"
+    echo ""
+    echo "gxc [options]"
+    echo "Option   Description"
+    echo "------------------------------------"
+    echo 'help     Show usage'
+    echo "start    Start the gigahex service"
+    echo "stop     Stop the gigahex service"
+    echo "reset    Reset the gigahex service"
+    echo ""
+}
+
+function start()
+{
+
+    flash=`cat ${GHX_HOME}/gigahex-server-$VERSION/sbin/flash`
+    echo "$flash"
+    echo ""
+    echo "> Starting the Gigahex Data Platform"
+
+    ${GHX_HOME}/gigahex-server-$VERSION/sbin/${OS}/caddy stop &> /dev/null
+    ${GHX_HOME}/gigahex-server-$VERSION/sbin/${OS}/caddy run --config ${GHX_HOME}/gigahex-server-$VERSION/sbin/Caddyfile >> ${GHX_HOME}/logs/proxy.log 2>&1 &
+
+    #Start and initialize the postgres database
+    brew services start postgresql >> ${GHX_HOME}/logs/db.log 2>&1
+    bash -c "psql -d postgres -c \"CREATE DATABASE gigahexdb;\"" &> /dev/null
+    bash -c "psql -d postgres -c \"CREATE USER hextron WITH ENCRYPTED PASSWORD 'hextron';\"" &> /dev/null
+    bash -c "psql -d postgres -c \"GRANT ALL PRIVILEGES ON DATABASE gigahexdb to hextron;\"" &> /dev/null
+
+    if test -f "$PID_FILE"; then
+        echo "Stop the service before starting again using command - gxc stop"
+    fi
+    export JAVA_HOME=/usr/local/opt/openjdk@11/libexec/openjdk.jdk/Contents/Home
+    export JAVA_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED"
+    (${GHX_HOME}/gigahex-server-$VERSION/bin/gigahex-server -Dconfig.resource=application.mac.conf -Dhttp.port=9000 &) | sed -e '/started/q'
+
+}
+
+function stop()
+{
+    echo "> Terminating Gigahex Data Platform"
+    ${GHX_HOME}/gigahex-server-$VERSION/sbin/${OS}/caddy stop >> ${GHX_HOME}/logs/proxy.log 2>&1
+    brew services stop postgresql >> ${GHX_HOME}/logs/db.log 2>&1
+    if test -f "$PID_FILE"; then
+        kill -9 `cat $PID_FILE` > /dev/null
+        rm $PID_FILE
+    fi
+    printf "$green> Termination completed!\n$reset"
+
+}
+
+function reset()
+{
+    echo "> Resetting Gigahex Data Platform"
+    stop
+    brew services start postgresql
+    echo "> Recreating the database"
+    sleep 2
+    bash -c "psql -d postgres -c \"DROP DATABASE gigahexdb;\"" > /dev/null 2>&1
+    start
+}
+
+if [ -n "$1" ]; then
+  while [ "$1" != "" ]; do
+    PARAM=`echo $1 | awk -F= '{print $1}'`
+    case $PARAM in
+        help)
+            usage
+            exit
+            ;;
+        start)
+            start
+            ;;
+        stop)
+            stop
+            ;;
+        reset)
+            reset
+            ;;
+        *)
+            echo "ERROR: unknown parameter \"$PARAM\""
+            usage
+            exit 1
+            ;;
+    esac
+    shift
+done
+else
+  usage
+fi

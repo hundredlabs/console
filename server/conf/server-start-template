@@ -1,0 +1,24 @@
+[Unit]
+Description=${{descr}}
+Requires=${{start_facilities}}
+
+[Service]
+Type=simple
+WorkingDirectory=${{chdir}}
+EnvironmentFile=${{env_config}}
+ExecStart=${{chdir}}/bin/${{exec}} -Dconfig.resource=application.dev.conf -Dhttp.port=9000 -Dhttps.port=9443
+ExecReload=/bin/kill -HUP `cat ${{chdir}}/RUNNING_PID`
+Restart=always
+RestartSec=${{retryTimeout}}
+SuccessExitStatus=${{SuccessExitStatus}}
+TimeoutStopSec=${{TimeoutStopSec}}
+User=${{daemon_user}}
+ExecStartPre=/bin/mkdir -p /run/${{app_name}}
+ExecStartPre=/bin/chown ${{daemon_user}}:${{daemon_group}} /run/${{app_name}}
+ExecStartPre=/bin/chown ${{daemon_user}}:${{daemon_group}} ${{chdir}}
+ExecStartPre=/bin/rm -f ${{chdir}}/RUNNING_PID
+PermissionsStartOnly=true
+LimitNOFILE=${{file_descriptor_limit}}
+
+[Install]
+WantedBy=multi-user.target

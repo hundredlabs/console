@@ -1,0 +1,14 @@
+:9080 {
+	encode gzip zstd
+
+	@back-end path /api/* /web/* /ws/*
+	handle @back-end {
+		reverse_proxy 127.0.0.1:9000
+        }
+
+	handle {
+		root * static_path
+		try_files {path} /index.html
+		file_server
+	}
+}
