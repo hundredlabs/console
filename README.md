@@ -9,6 +9,8 @@ local development and testing.
 
 Actively developed by [Gigahex LLP](https://gigahex.com).
 
+[![Gigahex Data Infrastructure Platform](assets/build-spark.png)](https://gigahex.com)
+
 ## Main Features
 - Visually build and deploy Spark, Kafka and HDFS Clusters
 - View Spark applications and easily navigate to the Spark History Web UI
