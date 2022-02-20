@@ -1,13 +1,9 @@
 [![Gigahex Data Infrastructure Platform](assets/gigahex-readme.png)](https://gigahex.com)
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/GigahexHQ?style=social)](https://twitter.com/ToolJet)
-## Gigahex Data Infrastructure Platform
 
 Gigahex is a web based data infrastructure platform to deploy and manage Apache Spark™, Apache 
-Kafka and Apache Hadoop clusters. Currently it supports running a single node cluster for 
+Kafka and Apache Hadoop clusters. Currently, it supports running a single node cluster for 
 local development and testing.
-
-Actively developed by [Gigahex LLP](https://gigahex.com).
 
 [![Gigahex Data Infrastructure Platform](assets/build-spark.png)](https://gigahex.com)
 
