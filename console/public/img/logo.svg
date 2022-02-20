@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 80.475 96.289">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #7081e3;
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-3 {
+        fill: url(#linear-gradient-2);
+      }
+
+      .cls-4 {
+        fill: url(#linear-gradient-3);
+      }
+
+      .cls-5 {
+        fill: url(#linear-gradient-4);
+      }
+
+      .cls-6 {
+        fill: url(#linear-gradient-5);
+      }
+
+      .cls-7 {
+        fill: url(#linear-gradient-6);
+      }
+
+      .cls-8 {
+        fill: url(#linear-gradient-7);
+      }
+
+      .cls-9 {
+        fill: url(#linear-gradient-8);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="0.536" y1="0.559" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#2b2121" stop-opacity="0"/>
+      <stop offset="1" stop-color="#090505" stop-opacity="0.969"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="0.5" y1="0.631" x2="0.5" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-opacity="0"/>
+      <stop offset="1" stop-color="#130d0d"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-3" x1="0.509" y1="0.526" x2="0.491" y2="0.474" gradientUnits="objectBoundingBox">
+      <stop offset="0.462" stop-color="#fff"/>
+      <stop offset="0.541" stop-color="#fbfbfb"/>
+      <stop offset="0.61" stop-color="#f0f0f0"/>
+      <stop offset="0.676" stop-color="#dedede"/>
+      <stop offset="0.739" stop-color="#c5c5c5"/>
+      <stop offset="0.8" stop-color="#a5a5a5"/>
+      <stop offset="0.86" stop-color="#7d7d7d"/>
+      <stop offset="0.92" stop-color="#4d4d4d"/>
+      <stop offset="0.977" stop-color="#181818"/>
+      <stop offset="1"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-4" x1="0.766" y1="1.218" x2="0.247" y2="-0.23" xlink:href="#linear-gradient-3"/>
+    <linearGradient id="linear-gradient-5" x1="0.143" y1="0.154" x2="0.5" y2="0.851" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#090505" stop-opacity="0.969"/>
+      <stop offset="1" stop-color="gray" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-6" x1="0.083" y1="0.609" x2="0.5" y2="0.663" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#090505" stop-opacity="0.969"/>
+      <stop offset="1" stop-color="#5a5858" stop-opacity="0.071"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-7" x1="0.5" x2="0.5" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#090505" stop-opacity="0.969"/>
+      <stop offset="1" stop-color="gray" stop-opacity="0.031"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-8" x1="0.078" x2="0.326" y2="0.419" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#090505" stop-opacity="0.969"/>
+      <stop offset="1" stop-color="#1d1919" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g id="OBJECTS" transform="translate(-144.709 -117.704)">
+    <g id="Group_12" data-name="Group 12">
+      <g id="Group_11" data-name="Group 11">
+        <g id="Group_19" data-name="Group 19" transform="translate(-70 69)">
+          <g id="Group_7" data-name="Group 7">
+            <path id="Path_9" data-name="Path 9" class="cls-1" d="M257.68,124.754l14.4,9.877,22.744-13.392-17.437-8.845Z"/>
+            <path id="Path_10" data-name="Path 10" class="cls-1" d="M257.68,124.754l-24.846-17.166.167.008v.246l-8.362,4.825-9.839,6.042,40.645,26.284L272.1,134.631Z"/>
+            <path id="Path_11" data-name="Path 11" class="cls-1" d="M233,106.579V86.1l-8.182-5.07L215,75.239v43.218l9.818-5.79L233,107.6Z"/>
+            <path id="Path_12" data-name="Path 12" class="cls-1" d="M233,107.6l-8.182,5.07L233,107.842Z"/>
+            <path id="Path_13" data-name="Path 13" class="cls-1" d="M233,85.854l-8.182-4.825L233,86.1Z"/>
+            <path id="Path_14" data-name="Path 14" class="cls-1" d="M257.68,68.942,277.386,81.3l17.438-8.845L272.079,59.065Z"/>
+            <path id="Path_15" data-name="Path 15" class="cls-1" d="M255.4,48.7,214.709,74.987l9.929,6.042L233,85.854V86.1l-.167.008L257.77,68.942l14.354-9.877Z"/>
+            <path id="Path_16" data-name="Path 16" class="cls-1" d="M295,121.7v-21L263,90.345V109.7Z"/>
+          </g>
+          <path id="Path_17" data-name="Path 17" class="cls-2" d="M257.68,124.754l-24.846-17.166.167.008v.246l-8.362,4.825-9.839,6.042,40.645,26.284L272.1,134.631Z"/>
+          <path id="Path_18" data-name="Path 18" class="cls-3" d="M233,106.579V86.1l-8.182-5.07L215,75.239v43.218l9.818-5.79L233,107.6Z"/>
+          <path id="Path_19" data-name="Path 19" class="cls-4" d="M233,107.6l-8.182,5.07L233,107.842Z"/>
+          <path id="Path_20" data-name="Path 20" class="cls-5" d="M233,85.854l-8.182-4.825L233,86.1Z"/>
+          <path id="Path_21" data-name="Path 21" class="cls-6" d="M257.68,68.942,277.386,81.3l17.438-8.845L272.079,59.065Z"/>
+          <path id="Path_22" data-name="Path 22" class="cls-7" d="M255.4,48.7,214.709,74.987l9.929,6.042L233,85.854V86.1l-.167.008L257.77,68.942l14.354-9.877Z"/>
+          <path id="Path_23" data-name="Path 23" class="cls-8" d="M257.68,124.754l14.4,9.877,22.2-13.063-19.725-7.4Z"/>
+          <path id="Path_24" data-name="Path 24" class="cls-9" d="M295,121.146V100.7L263,90.345V109.7l11.732,4.467,19.815,7.4.452.136v-.354l.184-.11Z"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

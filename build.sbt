@@ -100,7 +100,7 @@ lazy val `gigahex-server`  = (project in file("server"))
     mappings in Universal ++= directory(baseDirectory.value / "lib"),
     mappings in Universal ++= directory(baseDirectory.value / "sbin"),
     defaultLinuxInstallLocation := "/opt/gigahex",
-    packageDescription := """Gigahex Command line tool to enable developers publish the Spark metrics""",
+    packageDescription := """Gigahex Data Platform Server""",
     linuxStartScriptTemplate in Debian := {
       println((resourceDirectory in Compile).value.toPath.toAbsolutePath.toString)
       ((resourceDirectory in Compile).value / "server-start-template").toURI.toURL

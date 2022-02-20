@@ -1,0 +1,82 @@
+@import "../../variables.scss";
+
+.status-tag {
+  padding: 2px 4px;
+  font-size: 13px;
+  border-radius: 4px;
+}
+.status-tag-green {
+  color: $lt-status-running;
+  background-color: lighten($lt-status-running, 50%);
+  border: 2px solid;
+}
+
+.status-tag-red {
+  color: $lt-failed;
+  background-color: lighten($lt-failed, 38%);
+  border: 2px solid;
+}
+
+.status-tag-gray {
+  color: $lt-font-dull-color;
+  background-color: lighten($lt-font-dull-color, 25%);
+  border: 2px solid;
+}
+.status-tag-blue {
+  color: $lt-nav-main-bg;
+  background-color: lighten($lt-nav-main-bg, 30%);
+  border: 2px solid;
+}
+
+.status-tag-yellow {
+  color: $lt-warn;
+  background-color: lighten($lt-warn, 43%);
+  border: 2px solid;
+}
+
+.run-circle {
+  height: 10px;
+  width: 10px;
+  margin-right: 4px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.run-status-running {
+  animation: run-scaleout 1s infinite ease-in-out;
+  background-color: $lt-btn-primary;
+}
+@keyframes run-scaleout {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    -webkit-transform: scale(1);
+    //transform: scale(0.75);
+    opacity: 0.3;
+  }
+}
+.run-status-completed {
+  background-color: $lt-status-running;
+}
+.run-status-exceeded {
+  background-color: $lt-warn;
+}
+.run-status-passed {
+  background-color: $lt-status-running;
+}
+.run-status-succeeded {
+  background-color: $lt-status-running;
+}
+.run-status-failed {
+  background-color: $lt-failed;
+}
+.run-status-inactive {
+  background-color: $lt-font-dull-color;
+}
+.run-status-waiting {
+  background-color: $lt-font-dull-color;
+}

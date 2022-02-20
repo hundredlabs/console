@@ -68,6 +68,8 @@ setup_local_bin
 DOWNLOAD_URL=https://packages.gigahex.com/snapshots/community/${PACKAGE_NAME}-${RELEASE_VER}.zip
 
 mkdir -p ${HOME}/gigahex/logs
+mkdir -p ${HOME}/gigahex/tmp
+mkdir -p ${HOME}/gigahex/images
 
 printf "> Downloading $DOWNLOAD_URL\n"
 curl -fSL $DOWNLOAD_URL -o ${PACKAGE_NAME}-${RELEASE_VER}.zip

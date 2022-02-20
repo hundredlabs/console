@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="17" viewBox="0 0 24 17">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #a5aec0;
+      }
+    </style>
+  </defs>
+  <path id="ic_laptop_chromebook_24px" class="cls-1" d="M22,18V3H2V18H0v2H24V18Zm-8,0H10V17h4Zm6-3H4V5H20Z" transform="translate(0 -3)"/>
+</svg>

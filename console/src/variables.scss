@@ -1,0 +1,117 @@
+$dark-btn-primary: #837dff;
+$dark-btn-primary-border: #262275;
+$dark-bg: #423a6c;
+$dark-side-navbg: #392f5d;
+$dark-font-color: #d2d0e6;
+$dark-font-dull-color: #7a75a8;
+$dark-active-lab: #837dff;
+$dark-inactive-lab: #7a75a8;
+$dark-highlighted-tab: #291950;
+$dark-card-bg: #494477;
+$dark-card-border: #45396d;
+$dark-hr-line: #565184;
+$dark-inactive-btn-border: #434075;
+$dark-btn-stop-bg: #dc5959;
+$dark-status-running: #4bbb4b;
+
+$lt-nav-main-bg: #5f72f2;
+$lt-nav-profile-bg: #273bc2;
+$lt-nav-profile-hover: #323f96;
+$lt-brand-bg: #dbe0ff;
+$lt-main-bg: #f0f2f5;
+$lt-btn-primary: #5f72f2;
+$lt-btn-primary-hover: #495bd6;
+$lt-warn: #ffc107;
+$lt-row-hover: #283275;
+$lt-control-btn-border: #eee;
+$lt-btn-primary-border: #c3ccfd;
+$lt-table-header-cell: #f6f9fc;
+$lt-bg: #f0f2f5;
+$lt-side-navbg: #f4f5fb;
+$lt-selected-table-bg: #253388;
+$lt-font-color: #3b4a73;
+$lt-console: #222d4a;
+$lt-console-header: #4c4c4c;
+$lt-font-dull-color: #a5aec0;
+$lt-card-border: #e4e5f1;
+$lt-active-side-nav: #030e28;
+$lt-active-lab: #848cfb;
+$lt-inactive-lab: #a5aec0;
+$lt-highlighted-tab: #e3e7f3;
+$lt-card-bg: #fff;
+$lt-hr-line: #f8f9fb;
+$lt-inactive-btn-border: #e2e1f6;
+$lt-failed: #fa332e;
+$lt-failed-bg: #f1cccc;
+$lt-btn-stop-bg: #dc5959;
+$lt-warn: #ffbb02;
+$lt-status-running: #4bbb4b;
+$lt-side-navborder: #f4f2f9;
+$lt-project-row-bg: #ffffffb0;
+$lt-table-bg: #fff;
+$lt-table-row-border: #f2f2f2;
+$lt-dim-icon: #eaecf5;
+$lt-btn-success: #2ce5c2;
+$lt-btn-success-bg: #c5e8c7;
+$lt-primary-outline-hover: #e9ecfb;
+$lt-failed-outline-hover: #ffeaea;
+$lt-default-bg: #fafafa;
+
+// h1 {
+//   font-size: 2rem;
+//   color: $lt-font-color;
+// }
+// h2 {
+//   font-size: 1.8rem;
+//   color: $lt-font-color;
+// }
+// h3 {
+//   font-size: 1.6rem;
+//   color: $lt-font-color;
+// }
+// h4 {
+//   font-size: 1.4rem;
+//   color: $lt-font-color;
+// }
+// h5 {
+//   font-size: 1.2rem;
+//   color: $lt-font-color;
+// }
+// h6 {
+//   font-size: 1rem;
+//   color: $lt-font-color;
+// }
+.btn-all {
+  border: none;
+  box-shadow: 0px 1px 2px 0px rgba(37, 46, 113, 0.12);
+}
+
+:export {
+  colorWaiting: $lt-inactive-lab;
+}
+
+@mixin keyframes($animation-name) {
+  @-webkit-keyframes #{$animation-name} {
+    @content;
+  }
+  @-moz-keyframes #{$animation-name} {
+    @content;
+  }
+  @-ms-keyframes #{$animation-name} {
+    @content;
+  }
+  @-o-keyframes #{$animation-name} {
+    @content;
+  }
+  @keyframes #{$animation-name} {
+    @content;
+  }
+}
+
+@mixin animation($str) {
+  -webkit-animation: #{$str};
+  -moz-animation: #{$str};
+  -ms-animation: #{$str};
+  -o-animation: #{$str};
+  animation: #{$str};
+}

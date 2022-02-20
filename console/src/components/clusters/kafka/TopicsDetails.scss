@@ -1,0 +1,61 @@
+@import "../../../variables.scss";
+
+.topics-details-tabs {
+  height: 100%;
+  display: flex;
+  .topic-menu {
+    width: 180px;
+    .ant-menu {
+      padding-top: 0;
+      height: 100%;
+    }
+    .ant-menu-item {
+      display: flex;
+      align-items: center;
+    }
+    .ant-menu-item:first-child {
+      margin-top: 0;
+    }
+    .ant-menu-item-selected::after {
+      border-right: 0;
+    }
+    .ant-menu-item::after {
+      border-right: 0;
+    }
+  }
+  .topic-menu-content {
+    width: 100%;
+    .topic-breadcrumb {
+      padding: 8px 10px;
+    }
+  }
+
+  .expandable-container {
+    .ant-tabs-nav-list {
+      .ant-tabs-ink-bar {
+        background: $lt-btn-primary !important;
+      }
+    }
+
+    .ant-tabs-tab {
+      width: 150px;
+      text-align: center;
+      display: grid;
+      place-items: center;
+    }
+    .ant-tabs-nav {
+      background: none;
+      padding-bottom: 0 !important;
+    }
+    .ant-tabs-tab-active {
+      background: none;
+    }
+  }
+  .key-value-stat {
+    .kay-label {
+      color: $lt-font-color;
+      font-size: 12px;
+      font-weight: 600;
+    }
+  }
+}

@@ -1,0 +1,155 @@
+@import "../../variables.scss";
+.login-wrapper{
+  background-color: #f0f2f5;
+  min-height: 100vh;
+}
+
+.login-container {
+  width: 550px;
+  margin: 0 auto;
+  padding-top: 120px;
+  padding-bottom: 20px;
+
+  .login-form-div-center{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0), 0 1px 2px rgba(0, 0, 0, 0.16);
+    border-radius: 4px;
+    background-color: #fff;
+  }
+
+  .ant-select-selection {
+    border: none;
+    width: 458px;
+    height: 45px;
+    border-top: none;
+    padding-top: 8px;
+
+    &:active {
+      border: none;
+      box-shadow: none;
+    }
+    &:focus {
+      border: none;
+      box-shadow: none;
+    }
+  }
+
+  .login-form-forgot {
+    float: right;
+  }
+
+  .login-form-button {
+    margin-top: 20px;
+    width: 100%;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .ant-btn-dark {
+    background-color: #544f4f;
+    border-color: #000;
+    color: #fff;
+
+    &:hover {
+      background-color: #6a6969;
+      border-color: #000;
+      color: #fff;
+    }
+  }
+  .remember-me {
+    margin: 15px 0px;
+  }
+}
+
+.titleTxt {
+  text-align: center;
+  font-weight: normal;
+  margin-bottom: 20px;
+  color: $lt-font-dull-color;
+}
+.gx-form-input {
+  padding-left: 0px !important;
+  & > input {
+    padding: 25px 30px 25px 10px !important;
+    &:focus {
+      border: none;
+      box-shadow: none;
+    }
+  }
+}
+
+div.btnWrapper {
+  margin-top: 20px;
+  flex-direction: column;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  button {
+    width: 165px;
+  }
+}
+
+div.inputWrapper {
+  border: 1px solid $lt-highlighted-tab;
+  display: flex;
+  align-items: center;
+  background: $lt-card-bg;
+  position: relative;
+
+  &:nth-child(even) {
+    border-top: none;
+  }
+  &:nth-child(3) {
+    border-top: none;
+  }
+
+  span {
+    padding-left: 15px;
+  }
+
+  input {
+    border: none;
+    font-size: 15px;
+    width: 400px;
+    padding-left: 10px;
+    font-family: "Gudea", sans-serif;
+    padding-top: 15px;
+    padding-bottom: 15px;
+
+    &::placeholder {
+      color: #a5aec0;
+    }
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+.brandDiv {
+  display: flex;
+  text-decoration: none;
+  color: $lt-font-color;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+
+  & > img {
+    height: 50px;
+    width: 50px;
+  }
+
+  & > span {
+    padding-left: 8px;
+    display: table-cell;
+    font-weight: bold;
+    font-size: 26px;
+    vertical-align: middle;
+  }
+}

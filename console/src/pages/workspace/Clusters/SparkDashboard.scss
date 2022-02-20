@@ -1,0 +1,39 @@
+@import "../../../variables.scss";
+
+.spark-summary-wrapper {
+  padding: 20px;
+  .spark-master-card {
+    margin-bottom: 25px;
+    .spark-stats-cards {
+      padding: 20px;
+      .spark-stat-card {
+        width: 260px;
+        height: 110px;
+        display: grid;
+        place-items: center;
+        .alive-cores,
+        .cores,
+        .memory {
+          font-size: 1.6rem;
+          font-weight: 600;
+          color: $lt-font-color;
+          span {
+            font-size: 13px;
+          }
+        }
+        .spark-stat-label {
+          color: $lt-font-dull-color;
+        }
+      }
+    }
+  }
+  .worker-title {
+    padding: 10px 20px;
+    font-weight: 500;
+    color: $lt-font-color;
+  }
+  .spark-wrokers-list {
+    padding: 0 20px;
+    margin-bottom: 20px;
+  }
+}

@@ -1,0 +1,194 @@
+@import "../../../../variables.scss";
+.hdfs-storage-location {
+  height: 100%;
+  .location-container {
+    height: 100%;
+    background-color: $lt-card-bg;
+    display: grid;
+    .files-menu-items {
+      position: relative;
+      #cascader-area {
+        height: 100%;
+        width: 100%;
+        & > div {
+          width: 100%;
+          top: -20px !important;
+          height: 100% !important;
+          position: relative !important;
+          .ant-cascader-menus {
+            height: 100%;
+            width: 100%;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 0;
+            box-shadow: none;
+            & > div {
+              height: 100%;
+              padding-bottom: 32px;
+            }
+            .dropdown-header {
+              border-bottom: 1px solid #f0f0f0;
+            }
+            .dropdown-render {
+              height: 100%;
+              & > div {
+                height: 100%;
+                width: 100%;
+                overflow-x: auto;
+                &::-webkit-scrollbar {
+                  width: 8px; /* Remove scrollbar space */
+                  background: transparent;
+                }
+                &::-webkit-scrollbar-track {
+                  border-radius: 4;
+                  background: rgba(0, 0, 0, 0.1);
+                }
+                &::-webkit-scrollbar-thumb {
+                  cursor: pointer;
+                  border-radius: 4px;
+                  background-color: rgba(0, 0, 0, 0.4);
+                }
+                .ant-cascader-menu {
+                  resize: horizontal;
+                  position: relative;
+                  overflow: auto;
+                  height: 100%;
+                  width: auto;
+                  min-width: 200px;
+                  max-width: 400px;
+                  border-right: 1px solid #f0f0f0;
+                  .ant-cascader-menu-item {
+                    padding: 10px 12px !important;
+                    min-height: 40px;
+                    overflow: auto;
+                    white-space: pre-wrap;
+                    display: flex;
+                    .ant-empty {
+                      margin: 10px auto;
+                    }
+                    .ant-dropdown-trigger {
+                      width: 100%;
+                    }
+                  }
+                  &::-webkit-scrollbar {
+                    width: 10px; /* Remove scrollbar space */
+                    background: transparent;
+                  }
+                  &::-webkit-scrollbar-track {
+                    border-radius: 4;
+                    background: rgba(0, 0, 0, 0.1);
+                  }
+                  &::-webkit-scrollbar-thumb {
+                    cursor: pointer;
+                    border-radius: 4px;
+                    background-color: rgba(0, 0, 0, 0.4);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      .ant-cascader-picker-label,
+      .ant-cascader-input,
+      .ant-cascader-picker-arrow {
+        display: none;
+      }
+    }
+  }
+}
+.hdfs-context-menu {
+  width: 200px;
+  .ant-dropdown-menu-title-content {
+    span {
+      display: block;
+    }
+  }
+}
+.empty-file-contaier {
+  padding: 40px 0;
+  .ant-empty-description {
+    font-size: 14px;
+    color: $lt-font-dull-color;
+  }
+  .create-dir-btn {
+    margin-right: 20px;
+  }
+  .create-dir-btn,
+  .upload-file-btn {
+    border-radius: 4px;
+    height: 35px;
+    width: 150px;
+  }
+}
+.rename-file-model,
+.upload-file-model {
+  .ant-upload-drag {
+    box-shadow: 0 4px 6px #cececb40, 0 1px 3px #c5c2c2;
+    border: none;
+    border-radius: 4px;
+  }
+  .upload-file-input {
+    input {
+      margin-bottom: 20px;
+    }
+    .ant-alert-info {
+      margin-bottom: 20px;
+    }
+  }
+  .rename-file-input,
+  .upload-file-input {
+    input {
+      box-shadow: 0 4px 6px #cececb40, 0 1px 3px #c5c2c2;
+      border-radius: 4px;
+      padding: 8px 15px;
+      border: none;
+      height: 40px;
+    }
+  }
+}
+.create-file-model {
+  .create-file-input {
+    .ant-input-group {
+      overflow: hidden;
+      box-shadow: 0 4px 6px #cececb40, 0 1px 3px #c5c2c2;
+      border-radius: 4px;
+    }
+    .ant-input-group-addon {
+      border-right: 1px solid #f0f0f0;
+      border-left: none;
+      border-top: none;
+      border-bottom: none;
+      padding: 8px 15px;
+      height: 40px;
+    }
+
+    input {
+      padding: 8px 15px;
+      border: none;
+      height: 40px;
+    }
+  }
+}
+.hdfs-alert-info {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .ant-alert-info {
+    margin-bottom: 50px;
+  }
+  h4 {
+    margin-bottom: 0;
+  }
+}
+
+.file-status-drawer {
+  .key-label {
+    color: $lt-font-dull-color;
+  }
+  .key-value {
+    font-weight: bold;
+    color: $lt-font-color;
+  }
+}

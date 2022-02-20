@@ -1,0 +1,89 @@
+@import "../../variables.scss";
+
+.form-input {
+  color: $lt-font-color;
+  width: 40vw !important;
+  max-width: 400px !important;
+  input {
+    width: inherit;
+    &:focus {
+      border-radius: 3px;
+      border: 1px solid $lt-btn-primary;
+    }
+  }
+}
+
+.label {
+  display: block;
+  margin-bottom: 0px;
+  color: $lt-font-dull-color;
+}
+
+.error-container {
+  position: absolute;
+  right: 20px;
+  .error {
+    color: $lt-btn-stop-bg;
+  }
+}
+
+.stats-card {
+  flex-grow: 1;
+  margin-right: 17px;
+  background-color: $lt-table-bg;
+  width: calc(25vw - 80px);
+  margin-top: 20px;
+  min-height: 100px;
+
+  &:last-child {
+    margin-right: 0;
+  }
+
+  .stats-name {
+    text-align: left;
+    color: $lt-font-dull-color;
+    text-transform: uppercase;
+    padding: 10px 15px;
+  }
+  .stats-value {
+    text-align: right;
+    padding: 10px 15px;
+    // font-size: 1.8rem;
+  }
+}
+.card-line {
+  border: 1px solid #eee;
+}
+.card-shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0), 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+@media screen and (max-width: 860px) {
+  .stats-card {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+  }
+}
+@media screen and (max-width: 768px) {
+  .stats-card {
+    .stats-value {
+      text-align: left;
+      // font-size: 1.5rem;
+    }
+  }
+}
+@media screen and (max-width: 480px) {
+  .stats-card {
+    width: 100%;
+    margin-top: 0;
+  }
+}
+
+.input-wrapper {
+  margin-bottom: 1rem;
+
+  .input-label {
+    margin-bottom: 0.5rem;
+  }
+}

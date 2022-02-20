@@ -1,0 +1,11 @@
+@import "../../variables.scss";
+
+.centered-col {
+  margin: 0 auto;
+  margin-top: 25vh;
+  width: 75vw;
+
+  .brand-logo {
+    margin-bottom: 25px;
+  }
+}

@@ -1,0 +1,320 @@
+@import "../../../variables.scss";
+
+.clusters-container {
+  background-color: $lt-bg;
+  // min-height: 100vh;
+
+  .option-icon {
+    font-size: 18px;
+    margin-right: 4px;
+  }
+
+  .large-option-icon {
+    font-size: 26px;
+    margin-right: 4px;
+  }
+
+  .cluster-provider-card {
+    .pricing {
+      display: flex;
+      align-items: center;
+
+      .price-value {
+        margin-right: 10px;
+        display: flex;
+      }
+    }
+    .tag {
+      color: $lt-font-dull-color;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .feature {
+      display: flex;
+      margin-bottom: 8px;
+      i {
+        color: #08ce08;
+        font-size: 18px;
+        margin-right: 4px;
+      }
+    }
+    .ant-card-head {
+      padding: 0 20px;
+      .ant-card-head-title {
+        padding: 10px 0;
+
+        .provider-title {
+          display: flex;
+          align-items: center;
+          div {
+            &:first-child {
+              margin-right: 5px;
+              img {
+                height: 40px;
+              }
+            }
+          }
+          div.name {
+            font-size: 14px;
+            color: $lt-font-color;
+          }
+
+          div.info {
+            font-size: 13px;
+            color: $lt-font-dull-color;
+          }
+        }
+      }
+    }
+  }
+
+  .clusters-deploy {
+    text-align: center;
+    padding-top: 100px;
+    .header-title {
+      font-size: 18px;
+      font-weight: 600px;
+    }
+    .header-desc {
+      margin: 20px auto;
+      font-size: 14px;
+      width: 500px;
+      color: $lt-font-dull-color;
+    }
+    .jobs-deploy-btn {
+      border-radius: 4px;
+      height: 40px;
+      width: 200px;
+    }
+  }
+  .form-section {
+    padding: 50px 20px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    .form-step {
+      color: $lt-font-dull-color;
+      margin-bottom: 10px;
+    }
+    .form-title {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .jobs-types {
+      .jobs-type-items {
+        grid-template-columns: repeat(2, 200px);
+        margin: 20px 0;
+        display: grid;
+        grid-gap: 20px;
+        .jobs-item {
+          position: relative;
+          min-height: 180px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          cursor: pointer;
+          border: 1px solid #d8d2d2;
+          border-radius: 4px;
+          .jobs-type-tag {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+          }
+          .jobs-type-icon {
+            & > img {
+              height: 65px;
+              margin: 10px 0;
+            }
+            & > svg {
+              height: 80px !important;
+              width: 80px !important;
+            }
+          }
+          .jobs-type-name {
+            font-size: 16px;
+          }
+        }
+        .selected-item {
+          border: 2px solid $lt-btn-primary;
+          background-color: $lt-card-bg;
+        }
+      }
+    }
+
+    .config-deploy-form,
+    .app-spark-form {
+      padding-top: 10px;
+
+      .ant-radio-group {
+        background-color: #e0e4ea;
+        padding: 5px;
+        border-radius: 4px;
+        box-shadow: inset 1px 1px 3px #bbb8be;
+
+        .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+          color: $lt-font-color;
+          background: $lt-card-bg;
+          border-radius: 4px;
+          border: none;
+        }
+        .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
+          background-color: transparent;
+        }
+        .ant-radio-button-wrapper {
+          border: none;
+          color: $lt-font-dull-color;
+          background-color: transparent;
+          &:hover {
+            color: $lt-font-color;
+          }
+        }
+      }
+      .ant-select-selector-light {
+        box-shadow: 0 4px 6px #cececb40, 0 1px 3px #c5c2c2;
+      }
+      .ant-select {
+        border-radius: 4px;
+        .ant-select-selector {
+          border-radius: 4px;
+          padding: 8px;
+          height: 40px;
+          border: none;
+          display: flex;
+          align-items: center;
+        }
+      }
+
+      .ant-form-item-control-input-content {
+        .ant-form-item-label {
+          label {
+            font-size: 14px;
+          }
+        }
+
+        input {
+          box-shadow: 0 4px 6px #cececb40, 0 1px 3px #c5c2c2;
+          border-radius: 4px;
+          padding: 8px;
+          border: none;
+        }
+      }
+
+      .form-textarea {
+        border: none;
+        border-radius: 4px;
+      }
+      .advance-config {
+        margin-top: -50px;
+      }
+      .vali-aws-btn {
+        height: 35px;
+        border-radius: 4px;
+      }
+    }
+
+    .app-spark-form {
+      .ant-slider-rail {
+        background-color: $lt-inactive-btn-border;
+      }
+      .ant-slider-track {
+        background-color: $lt-btn-primary;
+      }
+    }
+
+    .footer-btns {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+      .btn-action {
+        width: 180px;
+        height: 40px;
+        border-radius: 4px;
+      }
+      .btn-prev {
+        background-color: $lt-card-bg;
+        margin-right: 20px;
+      }
+    }
+  }
+  .alert-banner {
+    margin-top: 20px;
+  }
+}
+
+.tbl-cluster {
+  th.table-cell-light {
+    background-color: $lt-table-header-cell;
+    color: $lt-font-dull-color;
+  }
+  th {
+    font-size: 11.5px;
+  }
+  .ant-table-tbody > tr > td {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  td.table-cell-light {
+    color: $lt-font-color;
+    background-color: $lt-card-bg;
+  }
+}
+
+.kafka-topic-form {
+  input {
+    box-shadow: 0 4px 6px #cececb40, 0 1px 3px #c5c2c2;
+    border-radius: 4px;
+    padding: 8px;
+    border: none;
+  }
+  .btn-action-light {
+    box-shadow: 0 4px 6px #cececb40, 0 1px 3px #c5c2c2;
+  }
+  .ant-input-number-input {
+    height: 40px;
+    box-shadow: 0 4px 6px #cececb40, 0 1px 3px #c5c2c2;
+    border-radius: 4px;
+    border: none;
+  }
+}
+.partition-list-table {
+  .brokder-id {
+    padding: 5px;
+  }
+}
+.topic-list-table {
+  .topic-name {
+    cursor: pointer;
+    color: $lt-btn-primary;
+  }
+  .ant-popover-inner-content {
+    padding: 0;
+    .partitions-tbl-container {
+      th.table-cell-light {
+        background-color: $lt-table-header-cell;
+        color: $lt-font-dull-color;
+      }
+      th {
+        font-size: 11.5px;
+      }
+      .ant-table-tbody > tr > td {
+        font-size: 14px;
+        height: 50px;
+        padding: 5px 16px;
+      }
+      td.run-history-col {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        margin: 0px auto;
+      }
+
+      td.table-cell-light {
+        color: $lt-font-color;
+        background-color: $lt-card-bg;
+        // border-bottom: none;
+      }
+    }
+  }
+}

@@ -53,7 +53,7 @@ project/plugins/project/
 .lib/
 # mpeltonen/sbt-idea plugin
 .idea_modules/
-
+server/sbin/ui
 # JIRA plugin
 atlassian-ide-plugin.xml
 
@@ -65,7 +65,8 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
-
+console/build
+console/node_modules
 # Editor-based Rest Client
 .idea/httpRequests
 

@@ -1,0 +1,8 @@
+.error-fallback {
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  .ant-alert {
+    max-width: 400px;
+  }
+}
