@@ -1,12 +1,16 @@
 package web.controllers.hdfs
 
+import java.io.File
+import java.nio.file.Paths
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.Materializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{FileIO, Source}
 import com.gigahex.commons.models.RunStatus
 import com.mohiva.play.silhouette.api.Silhouette
 import controllers.AssetsFinder
 import javax.inject.{Inject, Named}
+import play.api.Configuration
 import web.actors.clusters.spark.SparkProcesses
 import web.controllers.kafka.KafkaClientHandler
 import web.models
@@ -17,6 +21,7 @@ import play.api.cache.SyncCacheApi
 import play.api.i18n.I18nSupport
 import play.api.libs.json.{JsError, Json, Reads}
 import play.api.libs.ws.{EmptyBody, WSClient}
+import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc.{Action, AnyContent, AnyContentAsEmpty, InjectedController, Request, WebSocket}
 import play.cache.NamedCache
 import utils.auth.DefaultEnv
@@ -31,6 +36,7 @@ class HDFSController @Inject()(@Named("spark-cluster-manager") clusterManager: A
                                silhouette: Silhouette[DefaultEnv],
                                memberService: MemberService,
                                clusterService: ClusterService,
+                               configuration: Configuration,
                                ws: WSClient)(
                                 implicit
                                 ex: ExecutionContext,
@@ -57,7 +63,7 @@ class HDFSController @Inject()(@Named("spark-cluster-manager") clusterManager: A
               if(result > 0){
                 Created(Json.toJson(Map("clusterId" -> result)))
               } else {
-                BadRequest(Json.toJson(Map("error" -> "There is already an existing Kafka service installed on this host. Delete it before proceeding.")))
+                BadRequest(Json.toJson(Map("error" -> "There is already an existing Hadoop service installed on this host. Delete it before proceeding.")))
               }
             })
             .recoverWith {
@@ -95,9 +101,7 @@ class HDFSController @Inject()(@Named("spark-cluster-manager") clusterManager: A
         clusterService.getClusterProcess(clusterId, profile.workspaceId, HDFSProcesses.DATA_NODE).flatMap {
           case None => Future(NotFound(s"WebHDFS server is not running"))
           case Some(pd) => if(pd.status == RunStatus.Running){
-
             val url = s"http://${pd.host}:50070/webhdfs/v1/${path}?${request.rawQueryString}"
-            println(s"URL : ${url}")
             ws.url(url).get().map{ response =>
               Ok(response.body).as("application/json")
             }
@@ -111,7 +115,7 @@ class HDFSController @Inject()(@Named("spark-cluster-manager") clusterManager: A
     }
   }
 
-  def proxyModifyWebHDFS(clusterId: Long, path: String) = silhouette.UserAwareAction.async { implicit request =>
+  def modifyWebHDFS(clusterId: Long, path: String) = silhouette.UserAwareAction.async { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>
       if (hasWorkspaceViewPermission(profile, roles, profile.orgId, profile.workspaceId)) {
         clusterService.getClusterProcess(clusterId, profile.workspaceId, HDFSProcesses.DATA_NODE).flatMap {
@@ -133,6 +137,47 @@ class HDFSController @Inject()(@Named("spark-cluster-manager") clusterManager: A
     }
   }
 
+  def uploadToHDFS(clusterId: Long, path: String) = silhouette.UserAwareAction.async(parse.multipartFormData) { implicit request =>
+    handleMemberRequest(request, memberService) { (roles, profile) =>
+      if (hasWorkspaceViewPermission(profile, roles, profile.orgId, profile.workspaceId)) {
+        clusterService.getClusterProcess(clusterId, profile.workspaceId, HDFSProcesses.DATA_NODE).flatMap {
+          case None => Future(NotFound(s"WebHDFS server is not running"))
+          case Some(pd) => if(pd.status == RunStatus.Running){
+            val qstringWithUser = request.rawQueryString.replaceAll("user_name",System.getProperty("user.name"))
+            val url = s"http://${pd.host}:50070/webhdfs/v1/${path}?${qstringWithUser}"
+            val rootpath = configuration.get[String]("gigahex.tmp")
+            val uploadedFile = request.body.file("hdfsFile")
+            uploadedFile match {
+              case None => Future(NotFound)
+              case Some(f) =>
+                val filename    = Paths.get(f.filename).getFileName
+                val tmpFilePath = s"${rootpath}/${filename}"
+                f.ref.copyTo(Paths.get(tmpFilePath), replace = true)
+                val io = FileIO.fromPath(Paths.get(tmpFilePath))
+                val fp = FilePart("uploadTransfer", f.filename,
+                  f.contentType, io)
+                val s = Source.single(fp)
+                ws.url(url).withFollowRedirects(false).put(EmptyBody).flatMap{ response =>
+                  val headerLoc = response.header("Location").getOrElse("None")
+                  ws.url(headerLoc).put(s).map { putResponse =>
+
+                    Created(Json.toJson(Map("path" -> headerLoc)))
+                  }
+
+                }
+            }
+
+          } else {
+            Future(Ok(s" ${HDFSProcesses.DATA_NODE} is not running"))
+          }
+        }
+      } else {
+        Future.successful(Forbidden)
+      }
+    }
+  }
+
+
   def proxyDelFileWebHDFS(clusterId: Long, path: String) = silhouette.UserAwareAction.async { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>
       if (hasWorkspaceViewPermission(profile, roles, profile.orgId, profile.workspaceId)) {
@@ -141,7 +186,6 @@ class HDFSController @Inject()(@Named("spark-cluster-manager") clusterManager: A
           case Some(pd) => if(pd.status == RunStatus.Running){
             val qstringWithUser = request.rawQueryString.replaceAll("user_name",System.getProperty("user.name"))
             val url = s"http://${pd.host}:50070/webhdfs/v1/${path}?${qstringWithUser}"
-            println(s"URL : ${url}")
             ws.url(url).delete().map{ response =>
               Ok(response.body).as("application/json")
             }

@@ -19,7 +19,7 @@ class PgHDFSClusterRepo @Inject()(blockingEC: ExecutionContext, secretStore: Sec
 
   private implicit val ec = blockingEC
   private val hdfsProcesses = Seq(
-    ClusterProcess(HDFSProcesses.NAME_NODE, "localhost", 9000),
+    ClusterProcess(HDFSProcesses.NAME_NODE, "localhost", 9075),
     ClusterProcess(HDFSProcesses.DATA_NODE, "localhost", 50075)
   )
 

@@ -12,7 +12,6 @@ object MemberType extends Enumeration {
 }
 
 case class BetaSignedUpUser(reqId: Long, email: String, activationCode: String, activationStatus: Boolean, dtRequested: String)
-case class AlphaSignedUpUser(reqId: Long, email: String, dtRequested: String)
 
 object BetaSignedUpUser extends SQLSyntaxSupport[BetaSignedUpUser] {
   override val tableName = "access_requests"

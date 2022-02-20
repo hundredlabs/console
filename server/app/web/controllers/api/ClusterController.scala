@@ -1,7 +1,6 @@
 package web.controllers.api
 
 import akka.actor.ActorRef
-import com.gigahex.commons.models.{RegisterAgent, UpdateStatus}
 import com.mohiva.play.silhouette.api.Silhouette
 import controllers.AssetsFinder
 import javax.inject.{Inject, Named, Singleton}
@@ -41,27 +40,6 @@ with ClusterJsonFormat
     _.validate[A].asEither.left.map(e => BadRequest(JsError.toJson(e)))
   )
 
-  def registerAgent  = silhouette.UserAwareAction.async(validateJson[RegisterAgent]) { implicit request =>
-    handleRequest(request) { org =>
-    val agent = request.body
-      logger.info(s"registering the agent with name : ${agent.name} ")
-        clusterService.save(request.body, org.orgId).map { result =>
-          if(result.hasRegistered){
-            Created(Json.toJson(result))
-          } else {
-            BadRequest(Json.toJson(result))
-          }
-      }
-    }
-  }
-
-  def updateAgentstatus(agentId: String)  = silhouette.UserAwareAction.async(validateJson[UpdateStatus]) { implicit request =>
-    handleRequest(request) { org =>
-      clusterService.updateClusterStatus(org.orgId, agentId, request.body.status).map { result =>
-        Ok(Json.toJson(result))
-      }
-    }
-  }
 
 
 }

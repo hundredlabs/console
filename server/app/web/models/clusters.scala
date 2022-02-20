@@ -4,20 +4,15 @@ import java.time.ZonedDateTime
 
 import com.gigahex.commons.models.ClusterProvider.ClusterProvider
 import com.gigahex.commons.models.ClusterStatus.ClusterStatus
-import com.gigahex.commons.models.RunStatus.RunStatus
-import com.gigahex.commons.models.TriggerMethod.TriggerMethod
 import com.gigahex.commons.models.{
   ClusterIdResponse,
-  ClusterMiniView,
   ClusterNode,
   ClusterPingResponse,
   ClusterProvider,
-  ClusterRegistrationResponse,
   ClusterState,
   ClusterStatus,
   ClusterView,
   NewCluster,
-  RegisterAgent,
   TriggerMethod,
   UpdateStatus
 }
@@ -27,28 +22,13 @@ case class ServicePort(port: Int, name: String, isWebPort: Boolean = true)
 case class ContainerAppDef(name: String, version: String, ports: Seq[ServicePort])
 case class ContainerSandbox(image: String, apps: Seq[ContainerAppDef], addOns: Seq[String] = Seq())
 case class ClusterMetric(info: NewCluster, state: Option[ClusterState], sandboxContainer: Option[ContainerSandbox])
-case class ClusterUsage(sandboxCreated: Int, clustersConnected: Int, maxSandboxAllowed: Int, maxClustersConnections: Int)
 case class OrgUsagePlan(name: String,
                         maxLocalClusters: Int,
                         maxRemoteClusters: Int,
                         maxRemoteClusterSize: Int,
                         maxJobsCount: Int,
                         maxWorkspaceCount: Int)
-object OrgUsagePlan {
-  def freePlan(): OrgUsagePlan = OrgUsagePlan("Free", 2, 1, 3, 5, 1)
 
-  def teamsPlan(): OrgUsagePlan = OrgUsagePlan("Teams", Int.MaxValue, Int.MaxValue, Int.MaxValue, 100, 100)
-}
-case class ClusterDeploymentHistory(deploymentName: String,
-                                    jobName: String,
-                                    depId: Long,
-                                    jobId: Long,
-                                    deploymentRunId: Long,
-                                    triggerMethod: TriggerMethod,
-                                    status: String,
-                                    started: String,
-                                    runtime: String,
-                                    internalJobRunId: Option[String])
 object ServiceNames {
   val SPARK    = "spark"
   val HADOOP   = "hadoop"
@@ -101,24 +81,19 @@ trait ClusterJsonFormat {
   implicit val clusterStatusFmt       = Json.formatEnum(ClusterStatus)
   implicit val serviceComponentFmt    = Json.format[ServiceComponent]
   implicit val serverHostFmt          = Json.format[ServerHost]
-  implicit val registerClusterFmt     = Json.format[RegisterAgent]
-  implicit val clusterJsonFormatFmt   = Json.format[ClusterRegistrationResponse]
   implicit val updateStatusFmt        = Json.format[UpdateStatus]
   implicit val clusterViewFmt         = Json.format[ClusterView]
   implicit val newClusterFmt          = Json.format[NewCluster]
   implicit val clusterPingResponseFmt = Json.format[ClusterPingResponse]
-  implicit val clusterMiniViewFmt     = Json.format[ClusterMiniView]
   implicit val clusterIdResponseFmt   = Json.format[ClusterIdResponse]
   implicit val clusterNodeFmt         = Json.format[ClusterNode]
   implicit val clusterStateFmt        = Json.format[ClusterState]
   implicit val servicePortFmt         = Json.format[ServicePort]
   implicit val containerAppDefFmt     = Json.format[ContainerAppDef]
   implicit val containerSandboxFmt    = Json.format[ContainerSandbox]
-  implicit val clusterUsageFmt        = Json.format[ClusterUsage]
 
   implicit val clusterMetricFmt            = Json.format[ClusterMetric]
   implicit val triggerMethodFmt            = Json.formatEnum(TriggerMethod)
-  implicit val clusterDeploymentHistoryFmt = Json.format[ClusterDeploymentHistory]
   implicit val distributedServiceFmt       = Json.format[DistributedService]
   implicit val serviceOptFmt               = Json.format[ServiceOption]
   implicit val sandboxClusterFmt           = Json.format[SandboxCluster]

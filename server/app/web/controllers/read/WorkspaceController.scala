@@ -14,7 +14,7 @@ import web.models.{ ClusterJsonFormat, ClusterMetric, ErrorResponse, IllegalPara
 import web.models.formats.{AuthResponseFormats, SecretsJsonFormat}
 import web.models.rbac.{AccessPolicy, SubjectType}
 import web.models.requests.{CreateOrgWorkspace, OrgRequestsJsonFormat, ProvisionWorkspace}
-import web.services.{ClusterService, JobService, MemberService, SecretStore}
+import web.services.{ClusterService, MemberService, SecretStore}
 import play.api.{Configuration, Environment, Play}
 import play.api.cache.SyncCacheApi
 import play.api.i18n.I18nSupport
@@ -33,7 +33,6 @@ class WorkspaceController @Inject()(
     silhouette: Silhouette[DefaultEnv],
     memberService: MemberService,
     clusterService: ClusterService,
-    jobService: JobService,
     @NamedCache("workspace-keypairs") workspaceKeyCache: SyncCacheApi,
     @NamedCache("session-cache") userCache: SyncCacheApi,
     secretStore: SecretStore,
@@ -72,38 +71,6 @@ class WorkspaceController @Inject()(
             case Left(value) => BadRequest(Json.toJson(IllegalParam(request.path, memberId = 0, message = value.getMessage)))
             case Right(_)    => Created(Json.toJson(Map("created" -> true)))
           }
-      }
-    }
-  }
-
-  def notifyMember = silhouette.UserAwareAction.async { implicit request =>
-    handleMemberRequest(request, memberService) { (roles, profile) =>
-      if (hasOrgManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
-        memberService
-          .notifyMember(request.identity.get.id.get)
-          .map(hasSaved => Ok(Json.toJson(Map("saved" -> hasSaved))))
-          .recoverWith {
-            case e: Exception =>
-              Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
-          }
-      } else {
-        Future.successful(Forbidden)
-      }
-    }
-  }
-
-  def getOrgUsage(date: String) = silhouette.UserAwareAction.async { implicit request =>
-    handleMemberRequest(request, memberService) { (roles, profile) =>
-      if (hasOrgManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
-        memberService
-          .getJobUsageFor(profile.orgId, date)
-          .map(xs => Ok(Json.toJson(xs)))
-          .recoverWith {
-            case e: Exception =>
-              Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
-          }
-      } else {
-        Future.successful(Forbidden)
       }
     }
   }
@@ -238,36 +205,6 @@ class WorkspaceController @Inject()(
     * Save Docker based sandbox cluster.
     * @return
     */
-  def saveSandboxCluster = silhouette.UserAwareAction.async(validateJson[NewSandboxCluster]) { implicit request =>
-    handleMemberRequest(request, memberService) { (roles, profile) =>
-      if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
-        clusterService
-          .addCluster(
-            profile.orgId,
-            profile.workspaceId,
-            NewCluster(request.body.name, ClusterProvider.SANDBOX, "", Some(RandomGenerator.generate()), ClusterStatus.INACTIVE),
-            Some(request.body)
-          )
-          .map { result =>
-            result match {
-              case Left(err) => BadRequest(Json.toJson(IllegalParam(request.path, request.identity.get.id.get, err.getMessage)))
-              case Right(v)  => Created(Json.toJson(Map("clusterId" -> v)))
-            }
-          }
-          .recoverWith {
-            case e: Exception =>
-              Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
-          }
-      } else {
-        Future.successful(Forbidden)
-      }
-    }
-  }
-
-  /**
-    * Save Docker based sandbox cluster.
-    * @return
-    */
   def updateClusterStatus(clusterId: Long, status: String) = silhouette.UserAwareAction.async { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>
       if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
@@ -300,26 +237,6 @@ class WorkspaceController @Inject()(
     }
   }
 
-  def listWorkspaceClusters(status: String): Action[AnyContent] = silhouette.UserAwareAction.async { implicit request =>
-    handleMemberRequest(request, memberService) { (roles, profile) =>
-      if (hasWorkspaceViewPermission(profile, roles, profile.orgId, profile.workspaceId)) {
-        clusterService
-          .listClustersByWorkspace(profile.workspaceId,
-                                   status
-                                     .split(",")
-                                     .map(ClusterStatus.withName(_))
-                                     .toSeq: _*)
-          .map(clusters => Ok(Json.toJson(clusters)))
-          .recoverWith {
-            case e: Exception =>
-              Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
-          }
-      } else {
-        Future.successful(Forbidden)
-      }
-    }
-  }
-
   def listWorkspaceHosts: Action[AnyContent] = silhouette.UserAwareAction.async { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>
       if (hasWorkspaceViewPermission(profile, roles, profile.orgId, profile.workspaceId)) {
@@ -337,21 +254,6 @@ class WorkspaceController @Inject()(
     }
   }
 
-  def listWorkspaceClustersByProvider(provider: String): Action[AnyContent] = silhouette.UserAwareAction.async { implicit request =>
-    handleMemberRequest(request, memberService) { (roles, profile) =>
-      if (hasWorkspaceViewPermission(profile, roles, profile.orgId, profile.workspaceId)) {
-        clusterService
-          .listClustersByProvider(profile.workspaceId, provider)
-          .map(clusters => Ok(Json.toJson(clusters)))
-          .recoverWith {
-            case e: Exception =>
-              Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
-          }
-      } else {
-        Future.successful(Forbidden)
-      }
-    }
-  }
 
   /**
     * Verify if the cluster exists
@@ -398,98 +300,6 @@ class WorkspaceController @Inject()(
     }
   }
 
-  /**
-    * Fetch the clusters created and the limits based on the plan
-    * @return
-    */
-  def getClusterUsage: Action[AnyContent] = silhouette.UserAwareAction.async { implicit request =>
-    handleMemberRequest(request, memberService) { (roles, profile) =>
-      if (hasWorkspaceViewPermission(profile, roles, profile.orgId, profile.workspaceId)) {
-        clusterService
-          .getClusterUsage(profile.orgId)
-          .map(optClusters =>
-            optClusters match {
-              case None           => NotFound
-              case Some(clusters) => Ok(Json.toJson(clusters))
-          })
-          .recoverWith {
-            case e: Exception =>
-              Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
-          }
-      } else {
-        Future.successful(Forbidden)
-      }
-    }
-  }
-
-  def listClusterDeployments(clusterId: Long): Action[AnyContent] = silhouette.UserAwareAction.async { implicit request =>
-    handleMemberRequest(request, memberService) { (roles, profile) =>
-      if (hasWorkspaceViewPermission(profile, roles, profile.orgId, profile.workspaceId)) {
-        clusterService
-          .listDeploymentHistory(profile.workspaceId, clusterId)
-          .map(history => Ok(Json.toJson(history)))
-          .recoverWith {
-            case e: Exception =>
-              Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
-          }
-      } else {
-        Future.successful(Forbidden)
-      }
-    }
-  }
-
-  def fetchClusterMetrics(clusterId: Long): Action[AnyContent] = silhouette.UserAwareAction.async { implicit request =>
-    handleMemberRequest(request, memberService) { (roles, profile) =>
-      if (hasWorkspaceViewPermission(profile, roles, profile.orgId, profile.workspaceId)) {
-        clusterService
-          .fetchClusterMetric(profile.workspaceId, clusterId)
-          .map(state =>
-            state match {
-              case None    => NotFound
-              case Some(v) => Ok(Json.toJson(v))
-          })
-          .recoverWith {
-            case e: Exception =>
-              Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
-          }
-      } else {
-        Future.successful(Forbidden)
-      }
-    }
-  }
-
-  def streamClusterMetrics(clusterId: Long) = WebSocket.acceptOrResult[String, String] { implicit request =>
-    implicit val req = Request(request, AnyContentAsEmpty)
-    silhouette
-      .SecuredRequestHandler { securedRequest =>
-        Future.successful(HandlerResult(Ok, Some(securedRequest.identity)))
-      }
-      .flatMap {
-        case HandlerResult(r, Some(m)) =>
-          usingIdentity(m.id.get, memberService) { (roles, profile) =>
-            if (hasWorkspaceViewPermission(profile, roles, profile.orgId, profile.workspaceId)) {
-              val in = Sink.ignore
-              val clusterMetrics = Source
-                .tick(2.seconds, 3.seconds, "tick")
-                .mapAsync(1)(_ =>
-                  clusterService
-                    .fetchClusterMetric(profile.workspaceId, clusterId))
-                .map(Json.toJson(_).toString())
-
-              Future.successful(Right(Flow.fromSinkAndSource(in, clusterMetrics)))
-            } else {
-              Future.successful(Left(Unauthorized(Json.toJson(UserNotAuthenticated(request.path)))))
-            }
-          }
-
-        case HandlerResult(r, None) => Future.successful(Left(Unauthorized(Json.toJson(UserNotAuthenticated(request.path)))))
-      }
-      .recover {
-        case e: Exception =>
-          val result = InternalServerError(e.getMessage)
-          Left(result)
-      }
-  }
 
   def newCluster = silhouette.UserAwareAction.async(validateJson[NewCluster]) { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>

@@ -4,25 +4,17 @@ import com.gigahex.commons.models.ClusterProvider.ClusterProvider
 import com.gigahex.commons.models.ClusterStatus.ClusterStatus
 import com.gigahex.commons.models.RunStatus.RunStatus
 import com.gigahex.commons.models.{
-  ClusterMiniView,
   ClusterNode,
-  ClusterPingResponse,
   ClusterProvider,
-  ClusterRegistrationResponse,
   ClusterState,
   ClusterStatus,
   ClusterView,
-  JobType,
   NewCluster,
-  RegisterAgent,
   RunStatus,
-  TriggerMethod
 }
 import web.models.cluster.LocalSparkConfig
 import web.models.{
-  ClusterDeploymentHistory,
   ClusterMetric,
-  ClusterUsage,
   ContainerAppDef,
   ContainerSandbox,
   DBSandboxCluster,
@@ -52,15 +44,9 @@ trait ClusterRepo {
 
   def checkUsage(orgId: Long, provider: ClusterProvider, plan: OrgUsagePlan): Future[Boolean]
 
-  def listClusterStatusByWorkspace(workspaceId: Long, status: ClusterStatus*): Future[Seq[ClusterMiniView]]
-
   def getOrgId(workspaceId: Long): Future[Option[Long]]
 
-  def listClustersByProvider(workspaceId: Long, provider: String): Future[Seq[ClusterMiniView]]
-
   def clusterExists(workspaceId: Long, name: String, provider: String): Future[Option[Long]]
-
-  def listDeploymentHistory(workspaceId: Long, clusterId: Long): Future[Seq[ClusterDeploymentHistory]]
 
   def listLocalHostByWorkspace(workspaceId: Long): Future[Seq[ServerHost]]
 
@@ -70,31 +56,21 @@ trait ClusterRepo {
 
   def inactivateCluster(clusterId: Long): Future[Boolean]
 
-  def save(request: RegisterAgent, orgId: Long): Future[ClusterRegistrationResponse]
-
   def getClusterPackages(name: String): Future[Seq[String]]
 
   def listSandboxVersions(): Future[Seq[DBSandboxCluster]]
 
   def orgUsagePlan(orgId: Long): Future[Option[OrgUsagePlan]]
 
-  def fetchClusterMetric(workspaceId: Long, clusterId: Long): Future[Option[ClusterMetric]]
-
   def addCluster(workspaceId: Long, request: NewCluster, sandboxCluster: Option[NewSandboxCluster]): Future[Long]
-
-  def saveClusterState(workspaceId: Long, state: ClusterState): Future[Boolean]
 
   def listClusterIds(): Future[Map[String, Seq[Long]]]
 
   def listAllClusters(orgId: Long, workspaceId: Long): Future[Seq[ClusterView]]
 
-  def updateClusterStatus(orgId: Long, clusterId: String, status: ClusterStatus): Future[ClusterPingResponse]
-
   def removeCluster(orgId: Long, workspaceId: Long, clusterId: Long): Future[Boolean]
 
   def updateCluster(workspaceId: Long, clusterId: Long, status: ClusterStatus, detail: String): Future[Boolean]
-
-  def getClusterUsage(orgId: Long): Future[Option[ClusterUsage]]
 
   def updateClusterProcess(clusterId: Long, name: String, status: RunStatus, detail: String, processId: Option[Long]): Future[Boolean]
 
@@ -171,25 +147,6 @@ class ClusterRepoImpl(blockingEC: ExecutionContext) extends ClusterRepo {
     }
   }
 
-  override def listClusterStatusByWorkspace(workspaceId: Long, status: ClusterStatus*): Future[Seq[ClusterMiniView]] = Future {
-    blocking {
-      DB readOnly { implicit session =>
-        sql"""select id, name, provider, provider_cluster_id FROM clusters where status IN(${status
-          .map(_.toString)}) AND workspace_id = $workspaceId"""
-          .map { r =>
-            ClusterMiniView(
-              id = r.long("id"),
-              name = r.string("name"),
-              providerClusterId = r.string("provider_cluster_id"),
-              provider = ClusterProvider.withName(r.string("provider"))
-            )
-          }
-          .list()
-          .apply()
-      }
-    }
-  }
-
   override def getOrgId(workspaceId: Long): Future[Option[Long]] = Future {
     blocking {
       DB readOnly { implicit session =>
@@ -201,23 +158,6 @@ class ClusterRepoImpl(blockingEC: ExecutionContext) extends ClusterRepo {
     }
   }
 
-  override def listClustersByProvider(workspaceId: Long, provider: String): Future[Seq[ClusterMiniView]] = Future {
-    blocking {
-      DB readOnly { implicit session =>
-        sql"""select id, name, provider, provider_cluster_id FROM clusters where provider = $provider AND workspace_id = $workspaceId"""
-          .map { r =>
-            ClusterMiniView(
-              id = r.long("id"),
-              name = r.string("name"),
-              providerClusterId = r.string("provider_cluster_id"),
-              provider = ClusterProvider.withName(r.string("provider"))
-            )
-          }
-          .list()
-          .apply()
-      }
-    }
-  }
 
   override def clusterExists(workspaceId: Long, name: String, provider: String): Future[Option[Long]] = Future {
     blocking {
@@ -225,47 +165,6 @@ class ClusterRepoImpl(blockingEC: ExecutionContext) extends ClusterRepo {
         sql"""select id FROM clusters where provider = $provider AND name = $name AND workspace_id = $workspaceId"""
           .map(_.long("id"))
           .single()
-          .apply()
-      }
-    }
-  }
-
-  override def listDeploymentHistory(workspaceId: Long, clusterId: Long): Future[Seq[ClusterDeploymentHistory]] = Future {
-    blocking {
-      DB readOnly { implicit session =>
-        sql"""SELECT dc.id as deployment_id, jobs.name as job_name, jobs.job_type, dh.id as run_id, dc.job_id, dh.status, dh.dt_started, dh.trigger_method, dh.dt_last_updated, dc.name
-              FROM deployment_config as dc INNER JOIN deployment_history as dh
-               ON dc.id = dh.deployment_id INNER JOIN jobs ON dc.job_id = jobs.id WHERE dc.target_id = $clusterId
-               AND jobs.workspace_id = $workspaceId"""
-          .map { r =>
-            var internalJobRunId: Option[String] = None
-            JobType.withName(r.string("job_type")) match {
-              case com.gigahex.commons.models.JobType.spark =>
-                val runId = r.long("run_id")
-                internalJobRunId = sql"""SELECT app_id FROM events_spark_app WHERE dep_run_id = $runId"""
-                  .map(_.string("app_id"))
-                  .list()
-                  .apply()
-                  .headOption
-
-              case _ =>
-                internalJobRunId = None
-            }
-
-            ClusterDeploymentHistory(
-              deploymentName = r.string("name"),
-              jobName = r.string("job_name"),
-              depId = r.long("deployment_id"),
-              jobId = r.long("job_id"),
-              deploymentRunId = r.long("run_id"),
-              triggerMethod = TriggerMethod.withName(r.string("trigger_method")),
-              status = r.string("status"),
-              started = DateUtil.timeElapsed(r.dateTime("dt_started"), None) + " ago",
-              runtime = DateUtil.timeElapsed(r.dateTime("dt_started"), r.dateTimeOpt("dt_last_updated")),
-              internalJobRunId = internalJobRunId
-            )
-          }
-          .list()
           .apply()
       }
     }
@@ -344,38 +243,10 @@ class ClusterRepoImpl(blockingEC: ExecutionContext) extends ClusterRepo {
     }
   }
 
-  override def save(request: RegisterAgent, orgId: Long): Future[ClusterRegistrationResponse] = Future {
-    blocking {
-      DB localTx { implicit session =>
-        val optClusterId = sql"""select id from agents where id = ${request.agentId} and org_id = $orgId"""
-          .map(_.string("id"))
-          .single()
-          .apply()
-
-        optClusterId match {
-          case None =>
-            val insertCount = sql"""INSERT INTO agents(id, org_id, name, status, dt_registered, dt_ping)
-              VALUES(${request.agentId}, $orgId, ${request.name},${ClusterStatus.STARTING.toString},
-              ${DateUtil.now}, ${DateUtil.now})"""
-              .update()
-              .apply()
-            ClusterRegistrationResponse(insertCount == 1)
-
-          case Some(_) =>
-            //Update the status of the agent
-            val updateCount =
-              sql"""update agents set status = ${ClusterStatus.RUNNING.toString}, dt_ping = ${DateUtil.now} where id = ${request.agentId}
-                 and org_id = $orgId""".update().apply()
-            ClusterRegistrationResponse(updateCount == 1, "Cluster status updated")
-        }
-      }
-    }
-  }
-
   override def getClusterPackages(name: String): Future[Seq[String]] = Future {
     blocking {
       DB readOnly { implicit session =>
-        sql"""select version FROM package_repository where name = ${name} AND is_deprecated = false"""
+        sql"""select version FROM package_repository where name = $name AND is_deprecated = false"""
           .map(_.string("version"))
           .list()
           .apply()
@@ -430,63 +301,6 @@ class ClusterRepoImpl(blockingEC: ExecutionContext) extends ClusterRepo {
     ContainerSandbox(imageName, apps, addOns)
   }
 
-  override def fetchClusterMetric(workspaceId: Long, clusterId: Long): Future[Option[ClusterMetric]] = Future {
-    blocking {
-      DB readOnly { implicit session =>
-        var sandboxCluster: Option[SandboxCluster] = None
-        val containerSandbox =
-          sql"""SELECT service_option_id, sc.version, sc.service_options, cl.extra_services  FROM clusters as cl INNER JOIN
-             sandbox_cluster as sc ON cl.sandbox_id = sc.id WHERE cl.id = $clusterId and workspace_id = $workspaceId"""
-            .map { r =>
-              val clusterOptions    = Json.parse(r.string("service_options")).as[Seq[ServiceOption]]
-              val selectedServiceId = r.string("service_option_id")
-              (clusterOptions, selectedServiceId, r.string("version"), r.stringOpt("extra_services").map(_.split(",")).getOrElse(Array()))
-            }
-            .single()
-            .apply()
-            .map {
-              case (options, str, version, extraServices) => getContainerConfig(options, version, str, extraServices)
-            }
-
-        sql"""select name, provider_cluster_id, provider, status, region from clusters
-                where id = $clusterId and workspace_id = $workspaceId"""
-          .map { r =>
-            NewCluster(
-              name = r.string("name"),
-              provider = ClusterProvider.withName(r.string("provider")),
-              region = r.stringOpt("region").getOrElse(""),
-              providerClusterId = r.stringOpt("provider_cluster_id"),
-              status = ClusterStatus.withName(r.string("status"))
-            )
-          }
-          .single()
-          .apply()
-          .map { cluster =>
-            val clusterState =
-              sql"""SELECT active_apps, cnm.id as node_id, cnm.host, cnm.port, cnm.total_cpu, cnm.total_memory, completed_apps, failed_apps FROM cluster_metric as cm
-                     INNER JOIN cluster_node_metric as cnm ON cm.id = cnm.cluster_id WHERE cm.id = $clusterId"""
-                .map { r =>
-                  val clusterCounters =
-                    ClusterState(clusterId, r.int("active_apps"), r.int("completed_apps"), r.int("failed_apps"), Array.empty[ClusterNode])
-                  val clusterNode =
-                    ClusterNode(r.string("node_id"), r.string("host"), r.int("total_cpu"), r.long("total_memory"), r.intOpt("port"))
-                  (clusterCounters, clusterNode)
-                }
-                .list()
-                .apply()
-
-            val optClusterState = clusterState.headOption.map {
-              case (state, _) =>
-                val nodes = clusterState.map(_._2)
-                state.copy(nodes = nodes.toArray)
-            }
-
-            ClusterMetric(cluster, optClusterState, containerSandbox)
-          }
-
-      }
-    }
-  }
 
   override def addCluster(workspaceId: Long, request: NewCluster, sandboxCluster: Option[NewSandboxCluster]): Future[Long] = Future {
     blocking {
@@ -522,49 +336,6 @@ class ClusterRepoImpl(blockingEC: ExecutionContext) extends ClusterRepo {
     }
   }
 
-  override def saveClusterState(workspaceId: Long, state: ClusterState): Future[Boolean] = Future {
-    blocking {
-      DB localTx { implicit session =>
-        val now = DateUtil.now
-        sql"""INSERT INTO cluster_metric(id, active_apps, completed_apps, failed_apps, last_updated)
-             VALUES(${state.clusterId}, ${state.activeApps}, ${state.completedApps}, ${state.failedApps}, $now)
-             ON CONFLICT (id)
-            DO
-            UPDATE SET active_apps = ${state.activeApps},
-            completed_apps = ${state.completedApps},
-            failed_apps = ${state.failedApps},
-            last_updated = $now
-            """
-          .update()
-          .apply()
-        var count = 0
-        val dbNodes = sql"""SELECT id, host, port, total_cpu, total_memory FROM cluster_node_metric WHERE cluster_id = ${state.clusterId}"""
-          .map(r => ClusterNode(r.string("id"), r.string("host"), r.int("total_cpu"), r.long("total_memory"), r.intOpt("port")))
-          .list()
-          .apply()
-        val toBeRemovedNodes = dbNodes.filter(n => state.nodes.map(_.id).find(x => x == n.id).isEmpty)
-        toBeRemovedNodes.foreach { n =>
-          sql"""DELETE FROM cluster_node_metric WHERE cluster_id = ${state.clusterId} AND id = ${n.id}"""
-            .update()
-            .apply()
-        }
-
-        state.nodes.foreach { node =>
-          count = count + 1
-          sql"""INSERT INTO cluster_node_metric(id, cluster_id, host, port, total_cpu, total_memory,  last_updated)
-             VALUES(${node.id}, ${state.clusterId}, ${node.host}, ${node.port}, ${node.cpuCores}, ${node.memory}, $now)
-             ON CONFLICT (id, cluster_id)
-            DO
-            UPDATE SET total_cpu = ${node.cpuCores},
-            total_memory = ${node.memory},
-            last_updated = $now"""
-            .update()
-            .apply()
-        }
-        count == state.nodes.length
-      }
-    }
-  }
 
   override def listAllClusters(orgId: Long, workspaceId: Long): Future[Seq[ClusterView]] = Future {
     blocking {
@@ -599,25 +370,9 @@ class ClusterRepoImpl(blockingEC: ExecutionContext) extends ClusterRepo {
           .list()
           .apply()
           .groupBy(_._2)
-          .view.mapValues(_.map(_._1)).toMap
-      }
-    }
-  }
-
-  override def updateClusterStatus(orgId: Long, clusterId: String, status: ClusterStatus): Future[ClusterPingResponse] = Future {
-    blocking {
-      DB localTx { implicit session =>
-        sql"""update clusters set status = ${status.toString}, dt_ping = ${DateUtil.now} where id = $clusterId
-                 and org_id = $orgId""".update().apply()
-
-        val workIds =
-          sql"""select dh.id from deployment_history dh INNER JOIN deployment_config df ON dh.deployment_id = df.id WHERE df.org_id = $orgId
-             AND df.agent_id = $clusterId AND dh.status = ${RunStatus.Waiting.toString}"""
-            .map(_.long("id"))
-            .list()
-            .apply()
-
-        ClusterPingResponse(status, workIds)
+          .view
+          .mapValues(_.map(_._1))
+          .toMap
       }
     }
   }
@@ -637,44 +392,12 @@ class ClusterRepoImpl(blockingEC: ExecutionContext) extends ClusterRepo {
       DB localTx { implicit session =>
         val updateCount = sql"""update clusters SET status = ${status.toString}, status_detail = ${detail} WHERE id = $clusterId
                                 AND workspace_id = $workspaceId""".update().apply()
-        if(status == ClusterStatus.STARTING){
+        if (status == ClusterStatus.STARTING) {
           sql"""update cluster_processes SET status = ${RunStatus.Starting.toString} WHERE cluster_id = $clusterId"""
-            .update().apply()
+            .update()
+            .apply()
         }
         updateCount == 1
-      }
-    }
-  }
-
-  override def getClusterUsage(orgId: Long): Future[Option[ClusterUsage]] = Future {
-    blocking {
-      DB localTx { implicit session =>
-        val clusterUsageCounts = sql"""SELECT provider, count(*) FROM clusters as cl
-                        INNER JOIN workspaces ON cl.workspace_id = workspaces.id  WHERE
-                         workspaces.org_id = ${orgId} AND cl.status != ${ClusterStatus.DELETED.toString} GROUP BY provider
-                         """
-          .map { result =>
-            (ClusterProvider.withName(result.string("provider")), result.int("count"))
-          }
-          .list()
-          .apply()
-        var sandboxes       = 0
-        var remoteConnected = 0
-
-        clusterUsageCounts.foreach {
-          case (v, count) if v == ClusterProvider.SANDBOX => sandboxes = count
-          case (_, count)                                 => remoteConnected = remoteConnected + count
-        }
-
-        sql"""SELECT max_local_clusters_count, max_remote_cluster_count FROM usage_plans WHERE
-            org_id = ${orgId}"""
-          .map(r => (r.int("max_local_clusters_count"), r.int("max_remote_cluster_count")))
-          .single()
-          .apply()
-          .map {
-            case (maxLocal, maxRemote) => ClusterUsage(sandboxes, remoteConnected, maxLocal, maxRemote)
-          }
-
       }
     }
   }

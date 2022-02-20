@@ -1,12 +1,11 @@
 package web.repo.pg
 
-import java.time.{LocalDate, Period, ZonedDateTime}
-import java.util.UUID
+import java.time.{Period, ZonedDateTime}
 
 import com.mohiva.play.silhouette.api.LoginInfo
 import javax.inject.Inject
 import web.models.rbac.{AccessPolicy, AccessRoles, MemberProfile, MemberRole, SubjectType, Theme}
-import web.models.{AccessRequest, AlpahRequest, AlphaRequests, AlphaSignedUpUser, BetaRequestListResponse, BetaSignedUpUser, JobWithUsage, Member, MemberValue, OrgDetail, OrgUsagePlan, OrgWithKeys, WorkspaceViewResponse}
+import web.models.{ Member, MemberValue, OrgDetail, OrgUsagePlan, OrgWithKeys, WorkspaceViewResponse}
 import web.repo.MemberRepository
 import web.services.{APISecretsGenerator, SecretStore}
 import web.utils.DateUtil
@@ -20,81 +19,6 @@ class PgMemberRepoImpl @Inject()(blockingEC: ExecutionContext, apiKeyGenerator: 
 
   //implicit val session = AutoSession
   implicit val ec = blockingEC
-
-  override def getEmailByCode(code: String): Future[Option[String]] = Future {
-    blocking {
-      DB autoCommit { implicit session =>
-        sql"select email from approved_requests where activation_code = ${code} and activation_status = false"
-          .map(rs => rs.string("email"))
-          .single()
-          .apply()
-
-      }
-    }
-  }
-
-  override def updateApproveStatus(email: String): Future[Boolean] = Future {
-    blocking {
-      DB localTx { implicit session =>
-        sql"""update alpha_requests set code_sent = true where email = ${email}"""
-          .update()
-          .apply() == 1
-
-      }
-    }
-  }
-
-  override def approveRequest(email: String): Future[Option[String]] = Future {
-    blocking {
-      DB localTx { implicit session =>
-        //check if any such requests exists
-        val reqEmail =
-          sql"select email from alpha_requests where email = ${email} AND code_sent = false".map(_.string("email")).single().apply()
-        reqEmail map { _ =>
-          val code = UUID
-            .randomUUID()
-            .toString
-          sql"""insert into approved_requests
-                (email, activation_code, activation_status, dt_approved)
-                 values (${email}, ${code},false, ${ZonedDateTime
-            .now()} )"""
-            .update()
-            .apply()
-
-          code
-        }
-
-        //create an entry in approved_request table
-
-      }
-    }
-  }
-
-  override def listAlphaRequests(pageNum: Int, pageSize: Int): Future[AlphaRequests] = Future {
-    val starting = if (pageNum > 0) {
-      (pageNum * pageSize)
-    } else 0
-    blocking {
-      DB localTx { implicit session =>
-        val totalCount = sql"select count(*) as total_requests from alpha_requests where code_sent = false"
-          .map(rs => rs.long("total_requests"))
-          .single()
-          .apply()
-          .getOrElse(0L)
-        val requests = sql"select * from alpha_requests where code_sent = false limit ${pageSize} offset ${starting}"
-          .map(
-            r =>
-              AlphaSignedUpUser(
-                reqId = r.long("req_id"),
-                email = r.string("email"),
-                dtRequested = DateUtil.timeElapsed(r.zonedDateTime("dt_requested"), None)
-            ))
-          .list()
-          .apply()
-        AlphaRequests(totalCount, requests)
-      }
-    }
-  }
 
   override def getOrgDetail(orgId: Long): Future[Option[OrgDetail]] = Future {
     blocking {
@@ -121,115 +45,32 @@ class PgMemberRepoImpl @Inject()(blockingEC: ExecutionContext, apiKeyGenerator: 
     }
   }
 
-  override def getJobUsageByDate(orgId: Long, startDate: LocalDate, endDate: LocalDate): Future[Seq[JobWithUsage]] = Future {
-    blocking {
-      DB readOnly { implicit session =>
-        sql"""SELECT t.job_name, t.id, t.workspace, SUM(t.live_time)/3600 as total_time FROM (
-             |SELECT j.name as job_name, w.name as workspace, j.id, est.dep_run_id, est.executor_id, extract(epoch from MAX(est.ts) - MIN(est.ts)) as live_time from jobs as j INNER JOIN
-             |deployment_config as dc ON j.id = dc.job_id
-             |INNER JOIN deployment_history as dh ON dc.id = dh.deployment_id
-             |INNER JOIN events_spark_task_distribution as est ON dh.id = est.dep_run_id
-             |  INNER JOIN workspaces as w ON j.workspace_id = w.id
-             |WHERE w.org_id = ${orgId} AND dh.dt_started BETWEEN ${startDate} AND ${endDate}
-             |GROUP BY est.dep_run_id,j.name,j.id, workspace, est.executor_id ) as t GROUP BY t.job_name,t.workspace, t.id""".stripMargin
-          .map { r =>
-            JobWithUsage(r.string("job_name"), r.long("id"), r.string("workspace"), r.double("total_time"))
-          }
-          .list()
-          .apply()
-      }
-    }
-  }
 
-  override def newAccessRequest(request: AccessRequest): Future[Long] = Future {
-    blocking {
-      DB autoCommit { implicit session =>
-        val optGuestId = sql"select req_id from access_requests where email = ${request.email}"
-          .map(rs => rs.long("req_id"))
-          .single()
-          .apply()
-        optGuestId.getOrElse {
-          sql"""insert into access_requests
-                (name, email, server_region, activation_code, activation_status, dt_requested)
-                 values (${request.name}, ${request.email}, ${request.serverRegion},${UUID
-            .randomUUID()
-            .toString},false, ${ZonedDateTime
-            .now()} )""".updateAndReturnGeneratedKey
-            .apply()
-        }
-      }
-    }
-  }
-
-  override def newAlphaRequest(request: AlpahRequest): Future[Long] = Future {
-    blocking {
-      DB autoCommit { implicit session =>
-        val optGuestId = sql"select req_id from alpha_requests where email = ${request.email.trim}"
-          .map(rs => rs.long("req_id"))
-          .single()
-          .apply()
-        optGuestId.getOrElse {
-          sql"""insert into alpha_requests
-                (email, dt_requested)
-                 values (${request.email.trim}, ${ZonedDateTime
-            .now()} )""".updateAndReturnGeneratedKey
-            .apply()
-        }
-      }
-    }
-  }
-
-  override def notifyMember(memberId: Long): Future[Boolean] = Future {
-    blocking {
-      DB autoCommit { implicit session =>
-        sql"""SELECT member_id FROM feature_notification_requests WHERE member_id = ${memberId}"""
-          .map(_.long("member_id"))
-          .single().apply() match {
-          case None => sql"""insert into feature_notification_requests
-                (member_id, dt_requested)
-                 values (${memberId}, ${ZonedDateTime
-            .now()} )""".updateAndReturnGeneratedKey
-            .apply() > 0
-          case Some(_) => true
-        }
-
-
-      }
-    }
-  }
-
-  override def createOrg(name: String, ownerId: Long,plan: OrgUsagePlan, orgSlug: String, thumbnailImg: Option[String]): Future[Either[Throwable, Long]] =
+  override def createOrg(name: String, ownerId: Long, orgSlug: String, thumbnailImg: Option[String]): Future[Either[Throwable, Long]] =
     Future {
       blocking {
         DB localTx { implicit session =>
           val orgId =
             sql"""INSERT INTO orgs(name, owner, slug_id, thumbnail_img, dt_created)
-             VALUES(${name}, ${ownerId}, ${orgSlug}, ${thumbnailImg}, ${DateUtil.now})"""
+             VALUES($name, $ownerId, $orgSlug, $thumbnailImg, ${DateUtil.now})"""
               .updateAndReturnGeneratedKey()
               .apply()
-
-          //Create the default plan
-          sql"""INSERT INTO usage_plans(name, max_local_clusters_count, max_remote_cluster_count, max_remote_cluster_size,
-               max_jobs_count, max_workspace_count, org_id) VALUES(${plan.name}, ${plan.maxLocalClusters}, ${plan.maxRemoteClusters},
-               ${plan.maxRemoteClusterSize}, ${plan.maxJobsCount}, ${plan.maxWorkspaceCount}, ${orgId})"""
-            .updateAndReturnGeneratedKey()
-            .apply()
 
           //Create all the roles defined by system
           val adminPolicies = AccessRoles.ROLE_ORG_ADMIN.map(_.name).mkString(AccessRoles.policySeparator)
           val roleId = sql"""INSERT INTO roles(name, access_policies, manager_id)
               VALUES(${AccessRoles.ORG_ADMIN}, $adminPolicies,
-              ${orgId})"""
+              $orgId)"""
             .updateAndReturnGeneratedKey()
             .apply()
 
           sql"""INSERT INTO member_roles(member_id, role_id, subject_id, subject_type)
-             VALUES(${ownerId}, ${roleId}, ${orgId}, ${SubjectType.ORG.toString})"""
+             VALUES($ownerId, $roleId, $orgId, ${SubjectType.ORG.toString})"""
             .update()
             .apply()
 
           sql"""INSERT INTO member_profile(member_id, current_org_id, web_theme, desktop_theme)
-             VALUES(${ownerId}, ${orgId}, ${Theme.LIGHT.toString}, ${Theme.LIGHT.toString})"""
+             VALUES($ownerId, $orgId, ${Theme.LIGHT.toString}, ${Theme.LIGHT.toString})"""
             .update()
             .apply()
 
@@ -252,7 +93,7 @@ class PgMemberRepoImpl @Inject()(blockingEC: ExecutionContext, apiKeyGenerator: 
                orgs.name as org_name, orgs.slug_id as org_slug_id, desktop_theme FROM member_profile
              INNER JOIN orgs ON member_profile.current_org_id = orgs.id
              INNER JOIN workspaces ON member_profile.current_workspace_id = workspaces.id
-             WHERE member_id = ${id}"""
+             WHERE member_id = $id"""
           .map(r =>
             MemberProfile(
               r.long("current_org_id"),
@@ -266,16 +107,6 @@ class PgMemberRepoImpl @Inject()(blockingEC: ExecutionContext, apiKeyGenerator: 
           ))
           .single()
           .apply()
-      }
-    }
-  }
-
-  override def getDesktopToken(memberId: Long): Future[Option[String]] = Future {
-    blocking {
-      DB readOnly { implicit session =>
-          sql"""SELECT login_token FROM user_login_info WHERE member_id = $memberId"""
-          .map(_.string("login_token"))
-          .single().apply()
       }
     }
   }
@@ -309,7 +140,7 @@ class PgMemberRepoImpl @Inject()(blockingEC: ExecutionContext, apiKeyGenerator: 
     blocking {
       DB readOnly { implicit session =>
         sql"""SELECT name, access_policies, subject_id, subject_type, roles.id FROM roles INNER JOIN member_roles
-              ON roles.id = member_roles.role_id WHERE member_id = ${memberId}"""
+              ON roles.id = member_roles.role_id WHERE member_id = $memberId"""
           .map(
             r =>
               MemberRole(r.long("subject_id"),
@@ -336,13 +167,13 @@ class PgMemberRepoImpl @Inject()(blockingEC: ExecutionContext, apiKeyGenerator: 
             .single()
             .apply()
           id.flatMap { i =>
-              sql"""SELECT member_id FROM user_login_info WHERE login_info_id = ${i}"""
+              sql"""SELECT member_id FROM user_login_info WHERE login_info_id = $i"""
                 .map(_.long("member_id"))
                 .single()
                 .apply()
             }
             .flatMap { memberId =>
-              sql"select * from members where id = ${memberId}"
+              sql"select * from members where id = $memberId"
                 .map(rs =>
                   new Member(
                     rs.string("name"),
@@ -365,7 +196,7 @@ class PgMemberRepoImpl @Inject()(blockingEC: ExecutionContext, apiKeyGenerator: 
   override def findByEmail(email: String): Future[Option[Member]] = Future {
     blocking {
       DB autoCommit { implicit session =>
-        sql"select * from members where email = ${email}".map(rs => Member(rs)).single().apply()
+        sql"select * from members where email = $email".map(rs => Member(rs)).single().apply()
       }
     }
   }
@@ -388,15 +219,7 @@ class PgMemberRepoImpl @Inject()(blockingEC: ExecutionContext, apiKeyGenerator: 
   override def updateName(name: String, memId: Long): Future[Boolean] = Future {
     blocking {
       DB autoCommit { implicit session =>
-        sql"update members set name = ${name} where id = ${memId}".update().apply() == 1
-      }
-    }
-  }
-
-  override def setActivated(member: Member): Future[Boolean] = Future {
-    blocking {
-      DB autoCommit { implicit session =>
-        sql"update members set activated = true where id = ${member.id.getOrElse(0)}".update().apply() == 1
+        sql"update members set name = $name where id = ${memId}".update().apply() == 1
       }
     }
   }
@@ -411,8 +234,6 @@ class PgMemberRepoImpl @Inject()(blockingEC: ExecutionContext, apiKeyGenerator: 
     Future {
       blocking {
         DB localTx { implicit session =>
-          //update the activation status
-          sql"update approved_requests set activation_status = true where email = ${member.email}".update().apply()
 
           val memberId =
             sql"""INSERT INTO members (name, email, member_type, receive_updates, activated, dt_joined)
@@ -494,26 +315,6 @@ class PgMemberRepoImpl @Inject()(blockingEC: ExecutionContext, apiKeyGenerator: 
           }
           .list()
           .apply()
-      }
-    }
-  }
-
-  override def listApprovedRequests(pageNum: Int, pageSize: Int): Future[BetaRequestListResponse] = Future {
-    val starting = if (pageNum > 0) {
-      (pageNum * pageSize)
-    } else 0
-    blocking {
-      DB localTx { implicit session =>
-        val totalCount = sql"select count(*) as total_requests from approved_requests"
-          .map(rs => rs.long("total_requests"))
-          .single()
-          .apply()
-          .getOrElse(0L)
-        val requests = sql"select * from approved_requests limit ${pageSize} offset ${starting}"
-          .map(r => BetaSignedUpUser(r))
-          .list()
-          .apply()
-        BetaRequestListResponse(totalCount, requests)
       }
     }
   }

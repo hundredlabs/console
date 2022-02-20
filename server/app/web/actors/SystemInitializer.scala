@@ -9,7 +9,7 @@ import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import javax.inject.Inject
 import web.actors.SystemInitializer.InitSystem
 import web.models.{BetaSignupRequest, CredentialInfo, Member}
-import web.services.{AuthTokenService, AuthenticateService, DefaultKeyPairGenerator, MemberService, SecretStore, SparkEventService}
+import web.services.{AuthTokenService, AuthenticateService, DefaultKeyPairGenerator, MemberService, SecretStore}
 import scalikejdbc._
 
 import scala.concurrent.Future
@@ -35,7 +35,7 @@ class SystemInitializer @Inject()(memberService: MemberService,
             .apply()
 
 
-          if(tbls.size < 40){
+          if(tbls.size < 10){
             throw new IOException("Database not yet initialized...")
           }
 

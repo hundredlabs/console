@@ -63,14 +63,7 @@ object ClusterStatus extends Enumeration {
     values.find(_.toString == s).getOrElse(UNKNOWN)
 }
 
-case class RegisterAgent(name: String, agentId: String)
-case class ClusterRegistrationResponse(hasRegistered: Boolean,
-                                       message: String =
-                                         "Registered successfully")
-case class ClusterMiniView(id: Long,
-                           providerClusterId: String,
-                           name: String,
-                           provider: ClusterProvider)
+
 case class NewCluster(name: String,
                       provider: ClusterProvider,
                       region: String,

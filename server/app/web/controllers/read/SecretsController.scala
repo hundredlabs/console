@@ -9,7 +9,7 @@ import javax.inject.{Inject, Named}
 import web.models.formats.{AuthResponseFormats, SecretsJsonFormat}
 import web.models.rbac.AccessPolicy
 import web.models.{ ClusterJsonFormat, ErrorResponse}
-import web.services.{CloudService, MemberService, SecretStore}
+import web.services.{MemberService, SecretStore}
 import play.api.cache.SyncCacheApi
 import play.api.i18n.I18nSupport
 import play.api.libs.json.{JsError, Json, Reads}
@@ -25,7 +25,6 @@ class SecretsController @Inject()(
     components: ControllerComponents,
     silhouette: Silhouette[DefaultEnv],
     memberService: MemberService,
-    cloudService: CloudService,
     @NamedCache("session-cache") userCache: SyncCacheApi,
     secretStore: SecretStore
 )(
@@ -48,28 +47,6 @@ class SecretsController @Inject()(
     Future.successful(Ok(Json.toJson(Map("key" -> secretStore.getPublicKey))))
   }
 
-  def generateKeyPair = silhouette.UserAwareAction.async { implicit request =>
-    handleRequestWithOrg(request, memberService, userCache) { member =>
-      ???
-    }
-  }
-
-  def listAllClusters(cloudProvider: String, region: String) = silhouette.UserAwareAction.async { implicit request =>
-    handleMemberRequest(request, memberService) { (roles, profile) =>
-      if (roles.exists(p => p.subjectId == profile.orgId && p.policies.exists(_ == AccessPolicy.ORG_MANAGE))) {
-        IntegrationType.withName(cloudProvider) match {
-          case com.gigahex.commons.models.IntegrationType.EMR =>
-            Future.successful(
-              BadRequest(Json.toJson(Map("message" -> "Invalid Provider. Choose either AWS EMR, Databricks or GCP Dataproc"))))
-          case _ =>
-            Future.successful(
-              BadRequest(Json.toJson(Map("message" -> "Invalid Provider. Choose either AWS EMR, Databricks or GCP Dataproc"))))
-        }
-      } else {
-        Future.successful(Forbidden)
-      }
-    }
-  }
 
   def generateIntegrationKey(integration: String) = silhouette.UserAwareAction.async { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>
@@ -85,19 +62,6 @@ class SecretsController @Inject()(
     handleMemberRequest(request, memberService) { (roles, profile) =>
       if (roles.exists(p => p.subjectId == profile.orgId && p.policies.exists(_ == AccessPolicy.ORG_MANAGE))) {
         Future(Ok)
-      } else {
-        Future.successful(Forbidden)
-      }
-    }
-  }
-
-  def listRegions(integration: String) = silhouette.UserAwareAction.async { implicit request =>
-    handleMemberRequest(request, memberService) { (roles, profile) =>
-      if (roles.exists(p => p.subjectId == profile.orgId && p.policies.exists(_ == AccessPolicy.ORG_MANAGE))) {
-        cloudService.listRegions(profile.orgId, IntegrationType.withName(integration)).map {
-          case None     => NotFound(Json.toJson(Map("message" -> "No Account found")))
-          case Some(xs) => Ok(Json.toJson(xs))
-        }
       } else {
         Future.successful(Forbidden)
       }

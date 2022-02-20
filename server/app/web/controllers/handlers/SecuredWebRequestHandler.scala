@@ -12,7 +12,7 @@ import utils.auth.DefaultEnv
 import web.models.{JobValue, MemberValue, UserNotAuthenticated}
 import web.models.formats.AuthResponseFormats
 import web.models.rbac.{AccessPolicy, MemberProfile, MemberRole, SubjectType}
-import web.services.{JobService, MemberService}
+import web.services.MemberService
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -150,27 +150,6 @@ trait SecuredWebRequestHandler extends AuthResponseFormats {
     }
   }
 
-  def handleRequestWithOrgAndJobs[E <: Env, B](
-      request: UserAwareRequest[DefaultEnv, B],
-      memberService: MemberService,
-      userCache: SyncCacheApi,
-      jobId: Long,
-      jobCache: SyncCacheApi,
-      jobService: JobService)(handler: (MemberValue, JobValue) => Future[Result]): Future[Result] = {
-    request.identity match {
-      case Some(m) =>
-        val mv = memberService.getMemberValue(m.id.getOrElse(0), userCache)
-        val jv = jobService.updateJobCache(jobId, jobCache)
-        if (mv.orgIds.contains(1)) {
-          handler(mv, jv)
-        } else Future.successful(Results.Unauthorized(Json.toJson(UserNotAuthenticated(request.path))))
-
-      case _ => {
-        Future.successful(Results.Unauthorized(Json.toJson(UserNotAuthenticated(request.path))))
-      }
-    }
-  }
-
   def handleSparkClusterWebsocketRequest(silhouette: Silhouette[DefaultEnv],
                                   memberService: MemberService,
                                   userCache: SyncCacheApi,
@@ -231,7 +210,6 @@ trait SecuredWebRequestHandler extends AuthResponseFormats {
               Future.successful(Left(Results.Unauthorized(Json.toJson(UserNotAuthenticated(request.path)))))
             }
           }
-
 
         case HandlerResult(r, None) => Future.successful(Left(Results.Unauthorized(Json.toJson(UserNotAuthenticated(request.path)))))
       }
