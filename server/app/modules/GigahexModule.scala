@@ -1,13 +1,12 @@
 package modules
 
-import java.nio.file.Paths
 import java.util.concurrent.Executors
 
-import scala.collection.JavaConverters._
 import web.models.CredentialInfo
 import web.providers.EmailCredentialsProvider
-import web.repo.{AlertRepository, ClusterRepo, ClusterRepoImpl, CredentialsRepository, DeploymentsRepo, ESLogIndex, JobRepository, LoginInfoRepo, LogsIndex, MemberRepository, SparkEventsRepo, WorkspaceRepo}
-import web.services.{AlertEngine, AlertEngineImpl, AppInitializer, AuthTokenService, AuthTokenServiceImpl, CloudService, ClusterService, ClusterServiceImpl, DefaultKeyPairGenerator, DeploymentService, DeploymentServiceImpl, JobService, JobServiceImpl, MemberService, MemberServiceImpl, OrgService, OrgServiceImpl, SecretStore, SparkEventService, SparkEventServiceImpl, WorkspaceService, WorkspaceServiceImpl}
+import web.repo.{ ClusterRepo, ClusterRepoImpl, CredentialsRepository, LoginInfoRepo, MemberRepository, WorkspaceRepo}
+import web.services.{AppInitializer, AuthTokenService, AuthTokenServiceImpl, ClusterService, ClusterServiceImpl, DefaultKeyPairGenerator,
+  MemberService, MemberServiceImpl, OrgService, OrgServiceImpl, SecretStore, WorkspaceService, WorkspaceServiceImpl}
 import com.google.inject.name.Named
 import com.google.inject.{AbstractModule, Provides}
 import com.goterl.lazycode.lazysodium.SodiumJava
@@ -20,26 +19,19 @@ import com.mohiva.play.silhouette.api.{Environment, EventBus, Silhouette, Silhou
 import com.mohiva.play.silhouette.crypto.{JcaCrypter, JcaCrypterSettings, JcaSigner, JcaSignerSettings}
 import com.mohiva.play.silhouette.impl.authenticators._
 import com.mohiva.play.silhouette.impl.providers._
-import com.mohiva.play.silhouette.impl.providers.oauth1._
 import com.mohiva.play.silhouette.impl.providers.oauth1.secrets.{CookieSecretProvider, CookieSecretSettings}
-import com.mohiva.play.silhouette.impl.providers.oauth1.services.PlayOAuth1Service
-import com.mohiva.play.silhouette.impl.providers.oauth2._
-import com.mohiva.play.silhouette.impl.providers.openid.YahooProvider
-import com.mohiva.play.silhouette.impl.providers.openid.services.PlayOpenIDService
 import com.mohiva.play.silhouette.impl.providers.state.{CsrfStateItemHandler, CsrfStateSettings}
 import com.mohiva.play.silhouette.impl.services._
 import com.mohiva.play.silhouette.impl.util._
 import com.mohiva.play.silhouette.password.{BCryptPasswordHasher, BCryptSha256PasswordHasher}
 import com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO
 import com.mohiva.play.silhouette.persistence.repositories.DelegableAuthInfoRepository
-import com.sksamuel.elastic4s.http.JavaClient
-import com.sksamuel.elastic4s.{ElasticClient, ElasticProperties}
 import com.typesafe.config.Config
 import web.actors.clusters.{ClusterManager, ClusterStatusChecker}
-import web.actors.{AlertsManager, AppMetaFetcher, AppStatusMonitor, EventSubscriptionManager, SystemInitializer}
+import web.actors.{ SystemInitializer}
 import web.auth.GithubOAuthProvider
 import web.controllers.read.{DefaultRememberMeConfig, DefaultSilhouetteControllerComponents, RememberMeConfig, SilhouetteControllerComponents}
-import web.repo.pg.{OAuth2InfoDAO, PgAlertRepoImpl, PgDeploymentsRepoImpl, PgHDFSClusterRepo, PgJobRepoImpl, PgKafkaClusterRepo, PgLoginInfoRepo, PgMemberRepoImpl, PgSparkClusterRepo, PgSparkEventsRepoImpl, PgWorkspaceRepoImpl}
+import web.repo.pg.{OAuth2InfoDAO, PgHDFSClusterRepo, PgKafkaClusterRepo, PgLoginInfoRepo, PgMemberRepoImpl, PgSparkClusterRepo, PgWorkspaceRepoImpl}
 import web.utils.ApplicationHooks
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
@@ -52,7 +44,6 @@ import play.api.mvc.{Cookie, CookieHeaderEncoding}
 import utils.auth.{APIJwtEnv, CustomSecuredErrorHandler, CustomUnsecuredErrorHandler, DefaultEnv, WorkspaceAPIJwtEnv}
 import net.ceedubs.ficus.readers.EnumerationReader._
 import javax.inject.Singleton
-import web.cloud.aws.EMRClusterProvider
 import web.repo.clusters.{HDFSClusterRepo, KafkaClusterRepo, SparkClusterRepo}
 import play.api.libs.concurrent.AkkaGuiceSupport
 
@@ -63,7 +54,7 @@ import scala.concurrent.duration.FiniteDuration
 /**
   * The Guice module which wires all Silhouette dependencies.
   */
-class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
+class GigahexModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
   private lazy val blockingEC = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
@@ -104,35 +95,19 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     bind[MemberService].to[MemberServiceImpl]
     bind[OrgService].to[OrgServiceImpl]
     bind[WorkspaceService].to[WorkspaceServiceImpl]
-    bind[AlertEngine].to[AlertEngineImpl]
     bind[DelegableAuthInfoDAO[CredentialInfo]].toInstance(new CredentialsRepository)
     bind[DelegableAuthInfoDAO[OAuth2Info]].toInstance(new OAuth2InfoDAO)
-    bind[JobService].to[JobServiceImpl]
     bind[ClusterService].to[ClusterServiceImpl]
-    bind[DeploymentService].to[DeploymentServiceImpl]
-    bind[SparkEventService].to[SparkEventServiceImpl]
     bind[AuthTokenService].to[AuthTokenServiceImpl]
     bind[SparkClusterRepo].to[PgSparkClusterRepo]
     bind[KafkaClusterRepo].to[PgKafkaClusterRepo]
     bind[HDFSClusterRepo].to[PgHDFSClusterRepo]
-    bindActor[EventSubscriptionManager]("spark-events-manager")
     bindActor[ClusterManager](name = "spark-cluster-manager")
     bindActor[SystemInitializer](name = "system-init")
-    //bindActor[AppMetaFetcher]("app-meta")
-    //bindActor[ClusterStatusChecker]("cluster-status-checker")
     bind[AppInitializer].asEagerSingleton()
 
   }
 
-//  @Provides
-//  def provideS3Client(configuration: Configuration): AmazonS3 = {
-//    val accessKey = configuration.underlying.as[String]("aws.accessKey")
-//    val secret = configuration.underlying.as[String]("aws.secretKey")
-//    val awsCreds = new BasicAWSCredentials(accessKey, secret)
-//    AmazonS3ClientBuilder.standard()
-//      .withRegion(Regions.EU_WEST_2)
-//      .withCredentials(new AWSStaticCredentialsProvider(awsCreds)).build()
-//  }
 
   @Provides
   def provideMemberRepository: MemberRepository = {
@@ -140,21 +115,13 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
   }
 
   @Provides
-  def provideEsLogIndex(configuration: Configuration): LogsIndex = {
-    val host   = configuration.underlying.as[String]("es.host")
-    val port   = configuration.underlying.as[Int]("es.port")
-    val client = ElasticClient(JavaClient(ElasticProperties(s"http://${host}:${port}")))
-    new ESLogIndex(client)
-  }
-
-  @Provides @Singleton
+  @Singleton
   def provideSecretStore(configuration: Configuration): SecretStore = {
     val playEnv = play.Environment.simple()
     val rootPath = playEnv.rootPath().getAbsolutePath
     val appRoot = rootPath.substring(0, rootPath.lastIndexOf('.'))
-
     val libPath = configuration.underlying.as[String]("play.assets.libsodium")
-    val sodium  = new SodiumJava(appRoot + libPath)
+    val sodium = new SodiumJava(appRoot + libPath)
     new SecretStore(sodium)
   }
 
@@ -173,31 +140,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     new PgWorkspaceRepoImpl(blockingEC)
   }
 
-  @Provides
-  def provideDeploymentRep: DeploymentsRepo = {
-    new PgDeploymentsRepoImpl(blockingEC)
-  }
-
-  @Provides
-  def provideEventsRepo: SparkEventsRepo = {
-    new PgSparkEventsRepoImpl(blockingEC)
-  }
-
-  @Provides
-  def provideJobRepository: JobRepository = {
-    new PgJobRepoImpl(blockingEC)
-  }
-
-  @Provides
-  def provideAlertRepository: AlertRepository = {
-    new PgAlertRepoImpl(blockingEC)
-  }
-
-  @Provides
-  def provideCloudProvider(secretStore: SecretStore, emr: EMRClusterProvider): CloudService = {
-    new CloudService(emr, secretStore)
-  }
-
   /**
     * Provides the HTTP layer implementation.
     *
@@ -210,9 +152,9 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
   /**
     * Provides the Silhouette environment.
     *
-    * @param memberService The user service implementation.
+    * @param memberService        The user service implementation.
     * @param authenticatorService The authentication service implementation.
-    * @param eventBus The event bus instance.
+    * @param eventBus             The event bus instance.
     * @return The Silhouette environment.
     */
   @Provides
@@ -257,30 +199,13 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
   /**
     * Provides the social provider registry.
     *
-    * @param facebookProvider The Facebook provider implementation.
-    * @param googleProvider The Google provider implementation.
-    * @param gitHubProvider The VK provider implementation.
-    * @param twitterProvider The Twitter provider implementation.
-    * @param xingProvider The Xing provider implementation.
-    * @param yahooProvider The Yahoo provider implementation.
     * @return The Silhouette environment.
     */
   @Provides
-  def provideSocialProviderRegistry(facebookProvider: FacebookProvider,
-                                    googleProvider: GoogleProvider,
-                                    gitHubProvider: GithubOAuthProvider,
-                                    twitterProvider: TwitterProvider,
-                                    xingProvider: XingProvider,
-                                    yahooProvider: YahooProvider): SocialProviderRegistry = {
+  def provideSocialProviderRegistry(): SocialProviderRegistry = {
 
     SocialProviderRegistry(
       Seq(
-        googleProvider,
-        facebookProvider,
-        twitterProvider,
-        gitHubProvider,
-        xingProvider,
-        yahooProvider
       ))
   }
 
@@ -297,18 +222,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     new JcaSigner(config)
   }
 
-  /**
-    * Provides the crypter for the OAuth1 token secret provider.
-    *
-    * @param configuration The Play configuration.
-    * @return The crypter for the OAuth1 token secret provider.
-    */
-  @Provides @Named("oauth1-token-secret-crypter")
-  def provideOAuth1TokenSecretCrypter(configuration: Configuration): Crypter = {
-    val config = configuration.underlying.as[JcaCrypterSettings]("silhouette.oauth1TokenSecretProvider.crypter")
-
-    new JcaCrypter(config)
-  }
 
   /**
     * Provides the signer for the CSRF state item handler.
@@ -316,7 +229,8 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     * @param configuration The Play configuration.
     * @return The signer for the CSRF state item handler.
     */
-  @Provides @Named("csrf-state-item-signer")
+  @Provides
+  @Named("csrf-state-item-signer")
   def provideCSRFStateItemSigner(configuration: Configuration): Signer = {
     val config = configuration.underlying.as[JcaSignerSettings]("silhouette.csrfStateItemHandler.signer")
 
@@ -329,7 +243,8 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     * @param configuration The Play configuration.
     * @return The signer for the social state handler.
     */
-  @Provides @Named("social-state-signer")
+  @Provides
+  @Named("social-state-signer")
   def provideSocialStateSigner(configuration: Configuration): Signer = {
     val config = configuration.underlying.as[JcaSignerSettings]("silhouette.socialStateHandler.signer")
 
@@ -342,7 +257,8 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     * @param configuration The Play configuration.
     * @return The signer for the authenticator.
     */
-  @Provides @Named("authenticator-signer")
+  @Provides
+  @Named("authenticator-signer")
   def provideAuthenticatorSigner(configuration: Configuration): Signer = {
     val config = configuration.underlying.as[JcaSignerSettings]("silhouette.authenticator.signer")
 
@@ -355,7 +271,8 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     * @param configuration The Play configuration.
     * @return The crypter for the authenticator.
     */
-  @Provides @Named("authenticator-crypter")
+  @Provides
+  @Named("authenticator-crypter")
   def provideAuthenticatorCrypter(configuration: Configuration): Crypter = {
     val config = configuration.underlying.as[JcaCrypterSettings]("silhouette.authenticator.crypter")
 
@@ -382,13 +299,13 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
   /**
     * Provides the authenticator service.
     *
-    * @param signer The signer implementation.
-    * @param crypter The crypter implementation.
+    * @param signer               The signer implementation.
+    * @param crypter              The crypter implementation.
     * @param cookieHeaderEncoding Logic for encoding and decoding `Cookie` and `Set-Cookie` headers.
     * @param fingerprintGenerator The fingerprint generator implementation.
-    * @param idGenerator The ID generator implementation.
-    * @param configuration The Play configuration.
-    * @param clock The clock instance.
+    * @param idGenerator          The ID generator implementation.
+    * @param configuration        The Play configuration.
+    * @param clock                The clock instance.
     * @return The authenticator service.
     */
   @Provides
@@ -400,18 +317,20 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
                                   configuration: Configuration,
                                   clock: Clock): AuthenticatorService[CookieAuthenticator] = {
 
-    val config               = configuration.underlying.as[CookieAuthenticatorSettings]("silhouette.authenticator")
+    val config = configuration.underlying.as[CookieAuthenticatorSettings]("silhouette.authenticator")
     val authenticatorEncoder = new CrypterAuthenticatorEncoder(crypter)
 
     new CookieAuthenticatorService(config,
-                                   None,
-                                   signer,
-                                   cookieHeaderEncoding,
-                                   authenticatorEncoder,
-                                   fingerprintGenerator,
-                                   idGenerator,
-                                   clock)
+      None,
+      signer,
+      cookieHeaderEncoding,
+      authenticatorEncoder,
+      fingerprintGenerator,
+      idGenerator,
+      clock)
   }
+
+
 
   /**
     *
@@ -443,30 +362,12 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
   @Provides
   def provideAvatarService(httpLayer: HTTPLayer): AvatarService = new GravatarService(httpLayer)
 
-  /**
-    * Provides the OAuth1 token secret provider.
-    *
-    * @param signer The signer implementation.
-    * @param crypter The crypter implementation.
-    * @param configuration The Play configuration.
-    * @param clock The clock instance.
-    * @return The OAuth1 token secret provider implementation.
-    */
-  @Provides
-  def provideOAuth1TokenSecretProvider(@Named("oauth1-token-secret-signer") signer: Signer,
-                                       @Named("oauth1-token-secret-crypter") crypter: Crypter,
-                                       configuration: Configuration,
-                                       clock: Clock): OAuth1TokenSecretProvider = {
-
-    val settings = configuration.underlying.as[CookieSecretSettings]("silhouette.oauth1TokenSecretProvider")
-    new CookieSecretProvider(settings, signer, crypter, clock)
-  }
 
   /**
     * Provides the CSRF state item handler.
     *
-    * @param idGenerator The ID generator implementation.
-    * @param signer The signer implementation.
+    * @param idGenerator   The ID generator implementation.
+    * @param signer        The signer implementation.
     * @param configuration The Play configuration.
     * @return The CSRF state item implementation.
     */
@@ -504,7 +405,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
   /**
     * Provides the credentials provider.
     *
-    * @param authInfoRepository The auth info repository implementation.
+    * @param authInfoRepository     The auth info repository implementation.
     * @param passwordHasherRegistry The password hasher registry.
     * @return The credentials provider.
     */
@@ -516,21 +417,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     new EmailCredentialsProvider(authInfoRepository, passwordHasherRegistry)
   }
 
-  /**
-    * Provides the Facebook provider.
-    *
-    * @param httpLayer The HTTP layer implementation.
-    * @param socialStateHandler The social state handler implementation.
-    * @param configuration The Play configuration.
-    * @return The Facebook provider.
-    */
-  @Provides
-  def provideFacebookProvider(httpLayer: HTTPLayer,
-                              socialStateHandler: SocialStateHandler,
-                              configuration: Configuration): FacebookProvider = {
-
-    new FacebookProvider(httpLayer, socialStateHandler, configuration.underlying.as[OAuth2Settings]("silhouette.facebook"))
-  }
 
   /**
     * Provides the remember me configuration.
@@ -548,26 +434,13 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     )
   }
 
-  /**
-    * Provides the Google provider.
-    *
-    * @param httpLayer The HTTP layer implementation.
-    * @param socialStateHandler The social state handler implementation.
-    * @param configuration The Play configuration.
-    * @return The Google provider.
-    */
-  @Provides
-  def provideGoogleProvider(httpLayer: HTTPLayer, socialStateHandler: SocialStateHandler, configuration: Configuration): GoogleProvider = {
-
-    new GoogleProvider(httpLayer, socialStateHandler, configuration.underlying.as[OAuth2Settings]("silhouette.google"))
-  }
 
   /**
     * Provides the Github provider.
     *
-    * @param httpLayer The HTTP layer implementation.
+    * @param httpLayer          The HTTP layer implementation.
     * @param socialStateHandler The social state handler implementation.
-    * @param configuration The Play configuration.
+    * @param configuration      The Play configuration.
     * @return The Google provider.
     */
   @Provides
@@ -578,66 +451,5 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     new GithubOAuthProvider(httpLayer, socialStateHandler, configuration.underlying.as[OAuth2Settings]("silhouette.github"))
   }
 
-  /**
-    * Provides the VK provider.
-    *
-    * @param httpLayer The HTTP layer implementation.
-    * @param socialStateHandler The social state handler implementation.
-    * @param configuration The Play configuration.
-    * @return The VK provider.
-    */
-  @Provides
-  def provideVKProvider(httpLayer: HTTPLayer, socialStateHandler: SocialStateHandler, configuration: Configuration): VKProvider = {
 
-    new VKProvider(httpLayer, socialStateHandler, configuration.underlying.as[OAuth2Settings]("silhouette.vk"))
-  }
-
-  /**
-    * Provides the Twitter provider.
-    *
-    * @param httpLayer The HTTP layer implementation.
-    * @param tokenSecretProvider The token secret provider implementation.
-    * @param configuration The Play configuration.
-    * @return The Twitter provider.
-    */
-  @Provides
-  def provideTwitterProvider(httpLayer: HTTPLayer,
-                             tokenSecretProvider: OAuth1TokenSecretProvider,
-                             configuration: Configuration): TwitterProvider = {
-
-    val settings = configuration.underlying.as[OAuth1Settings]("silhouette.twitter")
-    new TwitterProvider(httpLayer, new PlayOAuth1Service(settings), tokenSecretProvider, settings)
-  }
-
-  /**
-    * Provides the Xing provider.
-    *
-    * @param httpLayer The HTTP layer implementation.
-    * @param tokenSecretProvider The token secret provider implementation.
-    * @param configuration The Play configuration.
-    * @return The Xing provider.
-    */
-  @Provides
-  def provideXingProvider(httpLayer: HTTPLayer,
-                          tokenSecretProvider: OAuth1TokenSecretProvider,
-                          configuration: Configuration): XingProvider = {
-
-    val settings = configuration.underlying.as[OAuth1Settings]("silhouette.xing")
-    new XingProvider(httpLayer, new PlayOAuth1Service(settings), tokenSecretProvider, settings)
-  }
-
-  /**
-    * Provides the Yahoo provider.
-    *
-    * @param httpLayer The HTTP layer implementation.
-    * @param client The OpenID client implementation.
-    * @param configuration The Play configuration.
-    * @return The Yahoo provider.
-    */
-  @Provides
-  def provideYahooProvider(httpLayer: HTTPLayer, client: OpenIdClient, configuration: Configuration): YahooProvider = {
-
-    val settings = configuration.underlying.as[OpenIDSettings]("silhouette.yahoo")
-    new YahooProvider(httpLayer, new PlayOpenIDService(client, settings), settings)
-  }
 }

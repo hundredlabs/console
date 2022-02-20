@@ -42,7 +42,6 @@ class PgWorkspaceRepoImpl @Inject()(blockingEC: ExecutionContext) extends Worksp
 
           //Generate the crypto keypair and save
           val wsKeyPair     = secretStore.generateKeyPair
-          //val encryptedPkey = secretStore.encryptPKey(wsKeyPair.getSecretKey.getAsBytes)
           sql"""INSERT INTO workspace_crypto_keypairs(hex_pub_key, hex_private_key, workspace_id)
              VALUES(${wsKeyPair.getPublicKey.getAsHexString}, ${wsKeyPair.getSecretKey.getAsHexString}, ${workspaceId})"""
             .update()
@@ -196,15 +195,6 @@ class PgWorkspaceRepoImpl @Inject()(blockingEC: ExecutionContext) extends Worksp
     }
   }
 
-  override def addWorkspaceSecrets(orgId: Long, workspaceId: Long, name: String, poolType: String, encryptedSecrets: String): Future[Boolean] = Future {
-    blocking {
-      DB localTx { implicit session =>
-        sql"""INSERT INTO secrets_pool(name, category, workspace_id, encrypted_secrets)
-             VALUES($name, $poolType, $encryptedSecrets)"""
-          .update().apply() > 0
-      }
-    }
-  }
 
 
 }

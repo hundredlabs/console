@@ -3,19 +3,16 @@ package web.controllers.api
 import akka.actor.ActorRef
 import akka.stream.Materializer
 import com.gigahex.commons.constants.Headers
-import com.gigahex.commons.events.ApplicationStarted
-import com.gigahex.commons.models.{AddMetricRequest, ClusterIdResponse, ClusterState, DeploymentActionUpdate, DeploymentUpdate, GxAppState, NewCluster, NewExecutor, RunStatus}
+import com.gigahex.commons.models.{ ClusterIdResponse, ClusterState, DeploymentActionUpdate, DeploymentUpdate,  NewCluster, RunStatus}
 import com.mohiva.play.silhouette.api.services.AuthenticatorResult
 import com.mohiva.play.silhouette.api.{LoginInfo, Silhouette}
 import com.mohiva.play.silhouette.api.util.Clock
 import controllers.AssetsFinder
 import javax.inject.{Inject, Named}
-import web.actors.AlertsManager.NotifyScheduler
-import web.models.{ActionForbidden, AuthRequestsJsonFormatter, ClusterJsonFormat, DeploymentJsonFormat, EventsFormat, InternalServerErrorResponse, JobFormats, JobModified, JobRequestResponseFormat, OrgResponse, OrgWithKeys, SignInResponse, UserNotAuthenticated, WorkspaceId, WorkspaceResponse}
+import web.models.{ActionForbidden, AuthRequestsJsonFormatter, ClusterJsonFormat, DeploymentJsonFormat, OrgResponse, OrgWithKeys, SignInResponse, UserNotAuthenticated, WorkspaceId, WorkspaceResponse}
 import web.models.common.JobErrorJson
 import web.providers.{APICredentialsProvider, WorkspaceAPICredentialsProvider}
-import web.services.{ClusterService, DeploymentService, JobService, SparkEventService}
-import web.utils.DateUtil
+import web.services.ClusterService
 import play.api.{Configuration, Logging}
 import play.api.cache.SyncCacheApi
 import play.api.i18n.I18nSupport
@@ -35,11 +32,7 @@ class WorkspaceApiController @Inject()(
     components: ControllerComponents,
     silhouette: Silhouette[WorkspaceAPIJwtEnv],
     credentialsProvider: WorkspaceAPICredentialsProvider,
-    sparkEventService: SparkEventService,
-    deploymentService: DeploymentService,
     clusterService: ClusterService,
-    configuration: Configuration,
-    clock: Clock
 )(
     implicit
     assets: AssetsFinder,
@@ -49,12 +42,9 @@ class WorkspaceApiController @Inject()(
     with I18nSupport
     with AuthRequestsJsonFormatter
     with AuthResponseFormats
-    with JobRequestResponseFormat
     with ClusterJsonFormat
-    with JobFormats
     with JobErrorJson
     with Logging
-    with EventsFormat
     with SecuredAPIReqHander {
 
   implicit val runStatusFmt            = Json.formatEnum(RunStatus)
@@ -94,69 +84,8 @@ class WorkspaceApiController @Inject()(
       }
   }
 
-  /**
-    * This method persists the JVM metrics being received from Spark executors
-    * @return
-    */
-  def runtimeExecutorsMetric =
-    silhouette.UserAwareAction.async(validateJson[AddMetricRequest]) { implicit request =>
-      val runIdOpt = request.headers.get(Headers.GIGAHEX_JOB_RUN_ID)
 
-      request.identity match {
-        case None => Future.successful(Forbidden)
-        case Some(WorkspaceId(id, _, _, _, _)) =>
-          sparkEventService
-            .saveRuntimeMetrics(id, runIdOpt.getOrElse("0").toLong, request.body)
-            .map(r => Ok(Json.parse(s"""{"update": ${r}}""")))
-      }
-    }
 
-  /**
-    * Every new executor is saved
-    * @return
-    */
-  def newSparkExecutorMetric =
-    silhouette.UserAwareAction.async(validateJson[NewExecutor]) { implicit request =>
-      request.identity match {
-        case None => Future.successful(Unauthorized(Json.toJson(UserNotAuthenticated(request.path))))
-        case Some(_) =>
-          val result = sparkEventService.addExecutorMetric(request.body)
-          result.map(r => Ok(Json.parse(s"""{"executorAdded": ${r}}""")))
-      }
-    }
-
-  def updateDeploymentLogs = silhouette.UserAwareAction.async(validateJson[DeploymentActionUpdate]) { implicit request =>
-    request.identity match {
-      case None => Future.successful(Unauthorized(Json.toJson(UserNotAuthenticated(request.path))))
-      case Some(_) =>
-        val update = request.body
-        val result = deploymentService.updateActionStatus(update.runId, update.actionId, update.status, update.logs, configuration)
-        result.map(r => Ok(Json.parse(s"""{"executorAdded": ${r}}""")))
-    }
-  }
-
-  def updateSparkAppStatus(runId: Long) = silhouette.UserAwareAction.async(validateJson[ApplicationStarted]) { implicit request =>
-    request.identity match {
-      case None => Future.successful(Unauthorized(Json.toJson(UserNotAuthenticated(request.path))))
-      case Some(_) =>
-        val tz = request.headers.get(Headers.USER_TIMEZONE)
-        sparkEventService
-          .appStarted(runId, request.body, tz.getOrElse("GMT"))
-          .map(r => Ok(Json.parse(s"""{"updated": ${r}}""")))
-
-    }
-  }
-
-  def pushSparkMetrics: Action[GxAppState] =
-    silhouette.UserAwareAction.async(validateJson[GxAppState]) { implicit request =>
-      request.identity match {
-        case None => Future.successful(Unauthorized(Json.toJson(UserNotAuthenticated(request.path))))
-        case Some(_) =>
-          val tz     = request.headers.get(Headers.USER_TIMEZONE).getOrElse("GMT")
-          val result = sparkEventService.publishAppState(request.body.runId, request.body.metric, tz)
-          result.map(r => Ok(Json.parse(s"""{"lastJobUpdated": $r}""")))
-      }
-    }
 
   def registerCluster: Action[NewCluster] = silhouette.UserAwareAction.async(validateJson[NewCluster]) { implicit request =>
     request.identity match {
@@ -179,40 +108,5 @@ class WorkspaceApiController @Inject()(
     }
   }
 
-  def getDeploymentWork(clusterId: Long) = silhouette.UserAwareAction.async { implicit request =>
-    request.identity match {
-      case None => Future.successful(Forbidden)
-      case Some(WorkspaceId(id, _, _, _, _)) =>
-        deploymentService.getDeploymentRunInstance(id, clusterId).map {
-          case None        => NotFound
-          case Some(value) => Ok(Json.toJson(value))
-        }
-    }
-  }
-
-  /**
-    * Update the deployment status once the work completes by the agent running in the cluster/host machine
-    * @return
-    */
-  def updateDeploymentRun = silhouette.UserAwareAction.async(validateJson[DeploymentUpdate]) { implicit request =>
-    request.identity match {
-      case None => Future.successful(Forbidden)
-      case Some(WorkspaceId(id, _, _, _, _)) =>
-        deploymentService.updateDeploymentRun(request.body.runId, request.body.status).map { r =>
-          Ok(Json.parse(s"""{"deploymentJobUpdated": ${r}}"""))
-        }
-    }
-
-  }
-
-  def saveClusterState: Action[ClusterState] = silhouette.UserAwareAction.async(validateJson[ClusterState]) { implicit request =>
-    request.identity match {
-      case None => Future.successful(Forbidden)
-      case Some(WorkspaceId(id, _, _, _, _)) =>
-        clusterService.saveClusterState(id, request.body).map { saved =>
-          if (saved) Ok else BadRequest
-        }
-    }
-  }
 
 }

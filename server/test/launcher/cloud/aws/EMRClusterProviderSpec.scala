@@ -7,7 +7,6 @@ import org.scalatest.matchers.must.Matchers
 
 class EMRClusterProviderSpec extends FixtureAsyncFlatSpec with Matchers {
 
-  val emrProvider = new EMRClusterProvider
   val apiKey = sys.env("AWS_API_KEY")
   val secret = sys.env("AWS_API_SECRET_KEY")
   behavior of "EMR Cluster"

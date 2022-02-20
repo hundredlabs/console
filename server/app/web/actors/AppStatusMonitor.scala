@@ -16,8 +16,6 @@ class AppStatusMonitor @Inject()(actorSystem: ActorSystem,
                                 @Named("cluster-status-checker") clusterChecker: ActorRef)(implicit executionContext: ExecutionContext) {
 
 
-  actorSystem.scheduler.scheduleAtFixedRate(initialDelay = 3.second, interval = 1.minute, receiver = appMetadataFetcher, message = AppMetaFetcher.ExpireApps)
-
   actorSystem.scheduler.scheduleAtFixedRate(initialDelay = 3.second,
                                  interval = 5.seconds,
                                  receiver = clusterChecker,

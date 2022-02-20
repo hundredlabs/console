@@ -176,17 +176,17 @@ class LocalKafkaManager(appConfig: Configuration, pkg: KafkaPackage, clusterServ
                 log.error(s"Failed downloading - ${exception.getClass.getName} - $errorMsg")
                 clusterService.updateCluster(pkg.workspaceId, pkg.clusterId, ClusterStatus.TERMINATED_WITH_ERRORS, Some(errorMsg))
                 context.become(handleClusterCommands(ClusterStatus.TERMINATED_WITH_ERRORS, progress, updater, processes))
-              case Success(installDir) =>
+              case Success(tarFile) =>
 
-                im.setFilesExecutable(s"$installDir/kafka_${pkg.scalaVersion}-${pkg.version}/bin", ".sh")
+                im.setFilesExecutable(s"$rootDir/kafka_${pkg.scalaVersion}-${pkg.version}/bin", ".sh")
                 im.modifyConfig(s"/kafka_${pkg.scalaVersion}-${pkg.version}/config/server.properties")(line => {
                   if(line.startsWith("log.dirs")){
-                    s"log.dirs=$installDir/kafka_${pkg.scalaVersion}-${pkg.version}/kafka-logs"
+                    s"log.dirs=$rootDir/kafka_${pkg.scalaVersion}-${pkg.version}/kafka-logs"
                   } else line
                 })
                 im.modifyConfig(s"/kafka_${pkg.scalaVersion}-${pkg.version}/config/zookeeper.properties")(line => {
                   if(line.startsWith("dataDir")){
-                    s"dataDir=$installDir/kafka_${pkg.scalaVersion}-${pkg.version}/zk-data"
+                    s"dataDir=$rootDir/kafka_${pkg.scalaVersion}-${pkg.version}/zk-data"
                   } else line
                 })
                 clusterService.updateCluster(pkg.workspaceId, pkg.clusterId, ClusterStatus.STARTING).onComplete {

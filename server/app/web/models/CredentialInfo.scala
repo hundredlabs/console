@@ -20,3 +20,5 @@ object CredentialInfo extends SQLSyntaxSupport[CredentialInfo] {
       rs.longOpt("id")
     )
 }
+
+case class BetaSignupRequest(name: String, email: String, password: String, receiveUpdates: Boolean)

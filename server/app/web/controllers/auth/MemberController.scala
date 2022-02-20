@@ -42,18 +42,6 @@ class MemberController @Inject()(
     _.validate[A].asEither.left.map(e => BadRequest(JsError.toJson(e)))
   )
 
-  def getDesktopToken = silhouette.UserAwareAction.async { implicit request =>
-    request.identity match {
-      case Some(m) if m.id.isDefined =>
-        memberService.getDesktopToken(m.id.get).map {
-          case None => NotFound
-          case Some(value) => Ok(Json.toJson(Map("token" -> value)))
-        }
-      case _ => {
-        Future.successful(Forbidden)
-      }
-    }
-  }
 
   def accountDetails = silhouette.UserAwareAction.async { implicit request =>
 
@@ -75,27 +63,6 @@ class MemberController @Inject()(
     }
     result.map(r => Ok(Json.toJson(r)))
   }
-
-  /**
-    * Create the organization and tagged the current user as the owner
-    * @return
-    */
-  def createOrg: Action[CreateOrUpdateOrg] = silhouette.UserAwareAction.async(validateJson[CreateOrUpdateOrg]) { implicit request =>
-    val orgReq = request.body
-    request.identity match {
-      case Some(m) if m.id.isDefined =>
-        memberService
-          .createOrg(orgReq.name, OrgUsagePlan.freePlan(), m.id.get, orgReq.slugId, orgReq.thumbnail)
-          .map {
-            case Left(value)  => BadRequest(Json.toJson(IllegalParam(request.path, -1, value.getMessage)))
-            case Right(value) => Ok(Json.toJson(Map("orgId" -> value)))
-          }
-      case _ => {
-        Future.successful(Forbidden)
-      }
-    }
-  }
-
 
 
   def changeName: Action[NameChangeRequest] = silhouette.UserAwareAction.async(validateJson[NameChangeRequest]) { implicit request =>

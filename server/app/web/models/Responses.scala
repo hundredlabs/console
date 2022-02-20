@@ -35,8 +35,6 @@ case class MemberInfoResponse(exist: Boolean,
                 message = "User exists")
   }
 }
-case class BetaRequestListResponse(total: Long, requests: Seq[BetaSignedUpUser])
-case class AlphaRequests(total: Long, requests: Seq[AlphaSignedUpUser])
 case class OrgResponse(id: Long, name: String)
 case class MemberWithApi(memberId: Long, name: String, pubKey: String) extends Identity
 case class OrgWithKeys(orgId: Long, orgName: String, key: String, secret: String, willExpireIn: String) extends Identity
@@ -45,6 +43,5 @@ case class WorkspaceAPIKey(name: String, apiKey: String, apiSecretKey: String)
 case class WorkspaceViewResponse(id: Long, name: String, created: String)
 case class WorkspaceResponse(id: Long, name: String)
 case class OrgDetail(name: String, slugId: String, thumbnailImg: Option[String])
-case class JobWithUsage(name: String, jobId: Long, workspace: String, usageInHrs: Double)
 
 

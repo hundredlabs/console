@@ -8,7 +8,6 @@ import play.api.mvc.{Result, Results}
 import utils.auth.APIJwtEnv
 import web.models.{JobValue, OrgWithKeys, UserNotAuthenticated}
 import web.models.formats.AuthResponseFormats
-import web.services.JobService
 
 import scala.concurrent.Future
 
@@ -28,17 +27,6 @@ trait SecuredAPIReqHander extends AuthResponseFormats {
     }
   }
 
-  def handleRequestWithJob[E <: Env, B](request: UserAwareRequest[APIJwtEnv, B], jobId: Long, jobService: JobService, jobCache: SyncCacheApi)
-                                       (handler: (OrgWithKeys,JobValue) => Future[Result]): Future[Result] = {
-    val jobValue = jobService.updateJobCache(jobId, jobCache)
-    (request.identity, jobValue) match {
-      case (Some(m), jv) if (m.orgId == 1) =>
-        handler(m, jv)
-      case _ => {
-        Future.successful(Results.Unauthorized(Json.toJson(UserNotAuthenticated(request.path))))
-      }
-    }
-  }
 
 
 }

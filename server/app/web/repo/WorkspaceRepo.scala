@@ -52,16 +52,5 @@ trait WorkspaceRepo {
     */
   def updateCurrentWorkspace(memberId: Long, workspaceId: Long, orgId: Long): Future[Option[MemberProfile]]
 
-  /**
-    * The incoming encrypted secrets using the pubkey of the respective workspace
-    * @param orgId
-    * @param workspaceId
-    * @param name
-    * @param poolType
-    * @param encryptedSecrets
-    * @return
-    */
-  def addWorkspaceSecrets(orgId: Long, workspaceId: Long, name: String, poolType: String, encryptedSecrets: String): Future[Boolean]
-
 
 }

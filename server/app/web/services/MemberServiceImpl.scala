@@ -1,14 +1,12 @@
 package web.services
 
-import web.models.{AccessRequest, AlpahRequest, AlphaRequests, BetaRequestListResponse, CredentialInfo, JobWithUsage, Member, MemberValue, OrgDetail, OrgUsagePlan, OrgWithKeys, WorkspaceAPIKey, WorkspaceId, WorkspaceViewResponse}
+import web.models.{CredentialInfo, Member, MemberValue, OrgDetail, OrgUsagePlan, OrgWithKeys, WorkspaceAPIKey, WorkspaceViewResponse}
 import web.repo.{LoginInfoRepo, MemberRepository, WorkspaceRepo}
 import com.mohiva.play.silhouette.api.{AuthInfo, LoginInfo}
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import javax.inject.Inject
 import web.models.rbac.{MemberProfile, MemberRole}
 import play.api.cache.SyncCacheApi
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, YearMonth}
 
 import web.models.requests.{CreateOrgWorkspace, ProvisionWorkspace, WorkspaceCreated}
 
@@ -59,12 +57,6 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository,
 
   override def retrieve(loginInfo: LoginInfo): Future[Option[Member]] = memberRepository.find(loginInfo)
 
-  override def getEmailByCode(code: String): Future[Option[String]] = memberRepository.getEmailByCode(code)
-
-  override def saveAccessRequest(request: AccessRequest): Future[Long] = memberRepository.newAccessRequest(request)
-
-  override def saveAlphaRequest(request: AlpahRequest): Future[Long] = memberRepository.newAlphaRequest(request)
-
   override def provisionWorkspace(name: String, request: ProvisionWorkspace,
                                   secretStore: SecretStore,
                                   memberId: Long): Future[Either[Throwable, WorkspaceCreated]] = {
@@ -80,7 +72,7 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository,
     }
 
     for {
-      org <- createOrg(orgName, OrgUsagePlan.freePlan(), memberId, orgSlug, None)
+      org <- createOrg(orgName, memberId, orgSlug, None)
       ws <- org.map(orgId => createOrgWorkspace(memberId, orgId, secretStore, CreateOrgWorkspace(request.name, None, None))) match {
         case Left(e) => Future.successful(Left(e))
         case Right(v) =>
@@ -92,8 +84,8 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository,
     } yield ws
   }
 
-  override def createOrg(name: String, plan: OrgUsagePlan, memberId: Long, slugId: String, thumbnail: Option[String]): Future[Either[Throwable, Long]] =
-    memberRepository.createOrg(name, memberId, plan, slugId, thumbnail)
+  override def createOrg(name: String, memberId: Long, slugId: String, thumbnail: Option[String]): Future[Either[Throwable, Long]] =
+    memberRepository.createOrg(name, memberId, slugId, thumbnail)
 
   override def createOrgWorkspace(ownerId: Long,
                                   orgId: Long,
@@ -101,28 +93,15 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository,
                                   request: CreateOrgWorkspace): Future[Either[Throwable, Long]] =
     workspaceRepo.createWorkspace(ownerId, orgId, secretStore, request)
 
-  override def notifyMember(memberId: Long): Future[Boolean] = memberRepository.notifyMember(memberId)
-
   override def addAuthenticateMethod[T <: AuthInfo](memberId: Long, loginInfo: LoginInfo, authInfo: T): Future[Unit] =
     for {
       _ <- loginInfoRepo.saveUserLoginInfo(memberId, loginInfo)
       _ <- authInfoRepository.add(loginInfo, authInfo)
     } yield ()
 
-  override def listApprovedRequests(pageNum: Int, pageSize: Int): Future[BetaRequestListResponse] =
-    memberRepository.listApprovedRequests(pageNum, pageSize)
-
-  override def listAlphaUsers(pageNum: Int, pageSize: Int): Future[AlphaRequests] = memberRepository.listAlphaRequests(pageNum, pageSize)
-
-  override def approveRequest(email: String): Future[Option[String]] = memberRepository.approveRequest(email)
-
-  override def updateApproveStatus(email: String): Future[Boolean] = memberRepository.updateApproveStatus(email)
-
-  override def setActivated(member: Member): Future[Boolean] = memberRepository.setActivated(member)
 
   override def getMemberProfile(id: Long): Future[Option[MemberProfile]] = memberRepository.getMemberProfile(id)
 
-  override def getDesktopToken(memberId: Long): Future[Option[String]] = memberRepository.getDesktopToken(memberId)
 
   override def getMemberRoles(memberId: Long): Future[Seq[MemberRole]] = memberRepository.getMemberRoles(memberId)
 
@@ -134,15 +113,6 @@ class MemberServiceImpl @Inject()(memberRepository: MemberRepository,
   }
 
   override def getOrgDetail(orgId: Long): Future[Option[OrgDetail]] = memberRepository.getOrgDetail(orgId)
-
-  override def getJobUsageFor(orgId: Long, date: String): Future[Seq[JobWithUsage]] = {
-    val startDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MMM-yyyy"))
-    val endDate = YearMonth
-      .from(startDate)
-      .atEndOfMonth()
-
-    memberRepository.getJobUsageByDate(orgId, startDate, endDate)
-  }
 
   override def updateOrg(orgId: Long, orgDetail: OrgDetail): Future[Option[OrgDetail]] =
     for {
