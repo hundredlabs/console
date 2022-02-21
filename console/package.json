@@ -1,6 +1,6 @@
 {
   "name": "Gigahex",
-  "version": "0.3.0-SNAPSHOT",
+  "version": "0.3.0",
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^4.3.0",

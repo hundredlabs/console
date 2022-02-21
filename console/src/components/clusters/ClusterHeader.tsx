@@ -5,7 +5,7 @@ import { HDFSClusterMetric, SparkClusterMetric } from "../../services/Workspace"
 import { StatusBadge, ProcessesStatus } from "../StatusTag/StatusTag";
 import { DownOutlined, LoadingOutlined, UpOutlined } from "@ant-design/icons";
 
-import { IconSandbox } from "../Icons/PlatformIcons";
+import { IconHadoop, IconKafka, IconSandbox, SparkMiniIcon } from "../Icons/PlatformIcons";
 
 import { MdMemory, MdDelete, MdPowerSettingsNew, MdLoop, MdViewCarousel, MdPlayCircleOutline } from "react-icons/md";
 import { ClusterStatus } from "../../services/Workspace";
@@ -13,6 +13,7 @@ import { bytesToSize, getLocalStorage, setLocalStorage } from "../../services/Ut
 import { DownloadStatus } from "../../pages/workspace/Clusters/ClusterDashboard";
 import { Link } from "react-router-dom";
 import { UserContext } from "../../store/User";
+import SparkIcon from "../Icons/SparkIcon";
 
 const BtnClusterStart: FC<{ onClick: () => void }> = ({ onClick }) => (
   <Tooltip title={`Start the cluster`}>
@@ -146,7 +147,9 @@ const ClusterHeader: FC<{
           <>
             <Col span={8} className='header-col'>
               <div className='header-icon'>
-                <IconSandbox selected={false} />
+                {serviceName === "spark" && <SparkMiniIcon />}
+                {serviceName === "kafka" && <IconKafka />}
+                {serviceName === "hadoop" && <IconHadoop />}
               </div>
               <div>
                 <div style={{ display: "flex", marginBottom: 10 }}>

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 GHX_HOME=${HOME}/gigahex
-VERSION=0.3.0-SNAPSHOT
+VERSION=0.3.0
 PID_FILE=${GHX_HOME}/gigahex-server-$VERSION/RUNNING_PID
 OS="`uname`"
 green="\033[32m"
@@ -44,7 +44,7 @@ function start()
     fi
     export JAVA_HOME=/usr/local/opt/openjdk@11/libexec/openjdk.jdk/Contents/Home
     export JAVA_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED"
-    (${GHX_HOME}/gigahex-server-$VERSION/bin/gigahex-server -Dconfig.resource=application.mac.conf -Dhttp.port=9000 &) | sed -e '/started/q'
+    {GHX_HOME}/gigahex-server-$VERSION/bin/gigahex-server -Dconfig.resource=application.mac.conf -Dhttp.port=9000
 
 }
 
