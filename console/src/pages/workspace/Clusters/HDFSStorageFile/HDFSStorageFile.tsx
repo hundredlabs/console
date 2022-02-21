@@ -1,21 +1,5 @@
 import React, { FC } from "react";
-import {
-  Alert,
-  Button,
-  Cascader,
-  Divider,
-  Drawer,
-  Dropdown,
-  Empty,
-  Input,
-  Menu,
-  message,
-  Modal,
-  Popconfirm,
-  Space,
-  Tooltip,
-  Upload,
-} from "antd";
+import { Alert, Button, Cascader, Divider, Drawer, Dropdown, Empty, Input, Menu, message, Modal, Popconfirm, Space, Tooltip, Upload } from "antd";
 import { CascaderOptionType, CascaderValueType } from "antd/lib/cascader";
 import { LocalHDFSFileService, FileType, HDFSFile, HDFSStrogeFiles, FileStatus } from "../../../../services/LocalHDFSFileService";
 import "./HDFSStorageFile.scss";
@@ -112,9 +96,7 @@ const UploadFileModel: FC<{
       visible={action.isUploadModel}
       onCancel={onCloseUploadModel}>
       <div className='upload-file-input'>
-        {action.root && (
-          <Input placeholder='/dirName or /dirName/dirName....' value={action.path} onChange={(e) => onUploadTar(e.target.value)} />
-        )}
+        {action.root && <Input placeholder='/dirName or /dirName/dirName....' value={action.path} onChange={(e) => onUploadTar(e.target.value)} />}
         {!action.path && <Alert message='To Upload a File write any /dirName or put / ' showIcon type='info' />}
         <Dragger
           onChange={onUploadInfo}
@@ -127,9 +109,7 @@ const UploadFileModel: FC<{
           action={(e) => {
             return new Promise((resolve, reject) => {
               const uploadPath = action.path === "/" ? `/${e.name}` : `${action.path}/${e.name}`;
-              resolve(
-                `${process.env.REACT_APP_API_ENDPOINT}/web/v1/hadoop/${clusterId}/webhdfs/v1${uploadPath}?op=CREATE&createflag=&createparent=true&overwrite=true&user.name=user_name`
-              );
+              resolve(`${process.env.REACT_APP_API_ENDPOINT}/web/v1/hadoop/${clusterId}/webhdfs/v1${uploadPath}?op=CREATE&createflag=&createparent=true&overwrite=true&user.name=user_name`);
             });
           }}
           withCredentials={true}
@@ -138,9 +118,7 @@ const UploadFileModel: FC<{
             <InboxOutlined />
           </p>
           <p className='ant-upload-text'>Click or drag file to this area to upload</p>
-          <p className='ant-upload-hint'>
-            Support for a single or bulk upload. Strictly prohibit from uploading company data or other band files
-          </p>
+          <p className='ant-upload-hint'>Support for a single or bulk upload. Strictly prohibit from uploading company data or other band files</p>
         </Dragger>
       </div>
     </Modal>
@@ -178,12 +156,7 @@ const FileStatusDrawer: FC<{ fileStatus: HDFSFile }> = ({ fileStatus }) => {
   );
 };
 
-const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: ClusterStatus; metric: HDFSClusterMetric }> = ({
-  clusterId,
-  activeTab,
-  status,
-  metric,
-}) => {
+const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: ClusterStatus; metric: HDFSClusterMetric }> = ({ clusterId, activeTab, status, metric }) => {
   const [loading, setLoading] = React.useState<boolean>(false);
   const [options, setOptions] = React.useState<CascaderOptionType[]>([]);
   const [refres, setRefres] = React.useState<boolean>(false);
@@ -393,6 +366,7 @@ const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: Clu
       oldPath: path,
       isRenameModel: true,
       isCreateModel: false,
+      isUploadModel: false,
     });
   };
   const onCloseUploadModel = () => {
@@ -465,9 +439,7 @@ const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: Clu
               if (r.type === "FILE") {
                 return {
                   label: (
-                    <Dropdown
-                      overlay={() => contextMenu({ fileType: r.type, path: `${path}/${r.pathSuffix}`, fileName: r.pathSuffix })}
-                      trigger={["contextMenu"]}>
+                    <Dropdown overlay={() => contextMenu({ fileType: r.type, path: `${path}/${r.pathSuffix}`, fileName: r.pathSuffix })} trigger={["contextMenu"]}>
                       <div>
                         <MdInsertDriveFile style={{ marginRight: 8 }} />
                         {r.pathSuffix}
@@ -482,9 +454,7 @@ const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: Clu
               if (r.type === "DIRECTORY") {
                 return {
                   label: (
-                    <Dropdown
-                      overlay={() => contextMenu({ fileType: r.type, path: `${path}/${r.pathSuffix}`, fileName: r.pathSuffix })}
-                      trigger={["contextMenu"]}>
+                    <Dropdown overlay={() => contextMenu({ fileType: r.type, path: `${path}/${r.pathSuffix}`, fileName: r.pathSuffix })} trigger={["contextMenu"]}>
                       <div>
                         <MdFolder style={{ marginRight: 8 }} />
                         {r.pathSuffix}
@@ -530,9 +500,7 @@ const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: Clu
             if (r.type === "FILE") {
               return {
                 label: (
-                  <Dropdown
-                    overlay={() => contextMenu({ fileType: r.type, path: r.pathSuffix, fileName: r.pathSuffix })}
-                    trigger={["contextMenu"]}>
+                  <Dropdown overlay={() => contextMenu({ fileType: r.type, path: r.pathSuffix, fileName: r.pathSuffix })} trigger={["contextMenu"]}>
                     <div>
                       <MdInsertDriveFile style={{ marginRight: 8 }} />
                       {r.pathSuffix}
@@ -546,9 +514,7 @@ const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: Clu
             if (r.type === "DIRECTORY") {
               return {
                 label: (
-                  <Dropdown
-                    overlay={() => contextMenu({ fileType: r.type, path: r.pathSuffix, fileName: r.pathSuffix })}
-                    trigger={["contextMenu"]}>
+                  <Dropdown overlay={() => contextMenu({ fileType: r.type, path: r.pathSuffix, fileName: r.pathSuffix })} trigger={["contextMenu"]}>
                     <div>
                       <MdFolder style={{ marginRight: 8 }} />
                       {r.pathSuffix}
@@ -588,21 +554,8 @@ const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: Clu
             Upload File
           </Button>
         </Empty>
-        <UploadFileModel
-          onUploadTar={onUploadTar}
-          action={action}
-          onCloseUploadModel={onCloseUploadModel}
-          onUploadInfo={onUploadInfo}
-          clusterId={clusterId}
-          metric={metric}
-        />
-        <CreateDirModel
-          onCreateDir={createDir}
-          action={action}
-          onDirNameChange={onDirNameChange}
-          onCancelModel={onCancelCreatetModel}
-          loading={loading}
-        />
+        <UploadFileModel onUploadTar={onUploadTar} action={action} onCloseUploadModel={onCloseUploadModel} onUploadInfo={onUploadInfo} clusterId={clusterId} metric={metric} />
+        <CreateDirModel onCreateDir={createDir} action={action} onDirNameChange={onDirNameChange} onCancelModel={onCancelCreatetModel} loading={loading} />
       </div>
     );
   } else if (status === "running" && options.length) {
@@ -640,13 +593,7 @@ const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: Clu
             </div>
           </div>
         </div>
-        <Drawer
-          title='File Status'
-          placement='right'
-          width={300}
-          className='file-status-drawer'
-          onClose={onCloseStatusDrawer}
-          visible={statusDrawer}>
+        <Drawer title='File Status' placement='right' width={300} className='file-status-drawer' onClose={onCloseStatusDrawer} visible={statusDrawer}>
           {fileStatus ? <FileStatusDrawer fileStatus={fileStatus} /> : <div>Status not found</div>}
         </Drawer>
         <Modal
@@ -659,29 +606,11 @@ const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: Clu
           okButtonProps={{ className: "btn-action", loading: loading }}
           onCancel={() => setAction({ ...action, isRenameModel: false })}>
           <div className='rename-file-input'>
-            <Input
-              onPressEnter={renameOk}
-              placeholder={`Rename the ${action.fileType.toLowerCase()}`}
-              value={action.newName}
-              onChange={(e) => setAction({ ...action, newName: e.target.value })}
-            />
+            <Input onPressEnter={renameOk} placeholder={`Rename the ${action.fileType.toLowerCase()}`} value={action.newName} onChange={(e) => setAction({ ...action, newName: e.target.value })} />
           </div>
         </Modal>
-        <UploadFileModel
-          onUploadTar={onUploadTar}
-          action={action}
-          onCloseUploadModel={onCloseUploadModel}
-          onUploadInfo={onUploadInfo}
-          clusterId={clusterId}
-          metric={metric}
-        />
-        <CreateDirModel
-          onCreateDir={createDir}
-          action={action}
-          onDirNameChange={onDirNameChange}
-          onCancelModel={onCancelCreatetModel}
-          loading={loading}
-        />
+        <UploadFileModel onUploadTar={onUploadTar} action={action} onCloseUploadModel={onCloseUploadModel} onUploadInfo={onUploadInfo} clusterId={clusterId} metric={metric} />
+        <CreateDirModel onCreateDir={createDir} action={action} onDirNameChange={onDirNameChange} onCancelModel={onCancelCreatetModel} loading={loading} />
       </div>
     );
   } else {
