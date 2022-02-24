@@ -96,8 +96,9 @@ const ClusterHeader: FC<{
   handleClusterDel: (id: number) => void;
   handleClusterStart: (id: number) => void;
   handleClusterStop: (id: number) => void;
+  getHeaderExpand: (isExpand: boolean) => void;
   downloadStatus: DownloadStatus;
-}> = ({ metric, clusterId, handleClusterDel, serviceName, downloadStatus, handleClusterStart, handleClusterStop }) => {
+}> = ({ metric, clusterId, handleClusterDel, serviceName, downloadStatus, handleClusterStart, handleClusterStop, getHeaderExpand }) => {
   const context = React.useContext(UserContext);
 
   const [isExpand, setExpand] = React.useState<boolean>(getLocalStorage("isHeaderExpand") ?? true);
@@ -117,23 +118,18 @@ const ClusterHeader: FC<{
 
   const onHeaderExpand = () => {
     setExpand(!isExpand);
+    getHeaderExpand(!isExpand);
     setLocalStorage("isHeaderExpand", !isExpand);
   };
 
   return (
     <div className='card-shadow-light cluster-header-wrapper' style={{ marginBottom: 20 }}>
-      <Row
-        gutter={[0, 0]}
-        className={`header-row ${isExpand ? "header-row-expand" : "header-row-shrink"}`}
-        align='middle'
-        justify='space-between'>
+      <Row gutter={[0, 0]} className={`header-row ${isExpand ? "header-row-expand" : "header-row-shrink"}`} align='middle' justify='space-between'>
         {!isExpand ? (
           <Col span={20}>
             <Breadcrumb separator='>'>
               <Breadcrumb.Item>
-                <Link
-                  style={{ color: "#5f72f2" }}
-                  to={`/${context.currentUser.profile?.orgSlugId}/workspace/${context.currentUser.profile?.workspaceId}/clusters`}>
+                <Link style={{ color: "#5f72f2" }} to={`/${context.currentUser.profile?.orgSlugId}/workspace/${context.currentUser.profile?.workspaceId}/clusters`}>
                   Clusters
                 </Link>
               </Breadcrumb.Item>
@@ -205,15 +201,11 @@ const ClusterHeader: FC<{
 
         <Col span={4} className='btn-container'>
           <Space size='large'>
-            {(metric.status === "inactive" ||
-              metric.status === "new" ||
-              metric.status === "terminated" ||
-              metric.status === "terminated_with_errors") && <BtnClusterStart onClick={() => handleClusterStart(clusterId)} />}
+            {(metric.status === "inactive" || metric.status === "new" || metric.status === "terminated" || metric.status === "terminated_with_errors") && (
+              <BtnClusterStart onClick={() => handleClusterStart(clusterId)} />
+            )}
 
-            {(metric.status === "starting" ||
-              metric.status === "bootstrapping" ||
-              metric.status === "stopping" ||
-              metric.status === "terminating") && (
+            {(metric.status === "starting" || metric.status === "bootstrapping" || metric.status === "stopping" || metric.status === "terminating") && (
               <Tooltip title={`${metric.status}`}>
                 <Button className='icon-btn-disabled' style={{ border: "none", padding: 0 }} disabled>
                   <i style={{ fontSize: 26, position: "relative", top: -3 }}>
@@ -234,9 +226,7 @@ const ClusterHeader: FC<{
               </Tooltip>
             )}
 
-            {(metric.status === "healthy" || metric.status === "running") && (
-              <BtnClusterShutdown handleShutdown={() => handleClusterStop(clusterId)} />
-            )}
+            {(metric.status === "healthy" || metric.status === "running") && <BtnClusterShutdown handleShutdown={() => handleClusterStop(clusterId)} />}
 
             <Divider type='vertical' style={{ borderLeft: "2px solid #a5aec0", height: 24 }} />
             <Popconfirm
@@ -265,9 +255,7 @@ const ClusterHeader: FC<{
               </Tooltip>
             </Popconfirm>
             <Tooltip title={isExpand ? "hide" : "show more"}>
-              <div className='expand-icon'>
-                {isExpand ? <UpOutlined onClick={onHeaderExpand} /> : <DownOutlined onClick={onHeaderExpand} />}
-              </div>
+              <div className='expand-icon'>{isExpand ? <UpOutlined onClick={onHeaderExpand} /> : <DownOutlined onClick={onHeaderExpand} />}</div>
             </Tooltip>
           </Space>
         </Col>
@@ -302,17 +290,3 @@ const ClusterHeader: FC<{
 };
 
 export default ClusterHeader;
-
-{
-  /* {Object.entries(metric.metrics.properties).map(([k, v], i) => {
-                      if (i === 0) {
-                        return (
-                          <div key={i}>
-                            {v} {k}
-                          </div>
-                        );
-                      } else {
-                        return <Badge key={i} color='#a5aec0' text={`${v} ${k}`} style={{ color: "#a5aec0" }} />;
-                      }
-                    })} */
-}

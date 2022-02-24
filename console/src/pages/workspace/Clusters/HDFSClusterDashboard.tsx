@@ -9,7 +9,7 @@ import HDFSStorageFile from "./HDFSStorageFile/HDFSStorageFile";
 import ClusterHeader from "../../../components/clusters/ClusterHeader";
 import { history } from "../../../configureStore";
 import WebService from "../../../services/WebService";
-import { bytesToSize, calculatePer } from "../../../services/Utils";
+import { bytesToSize, calculatePer, getLocalStorage } from "../../../services/Utils";
 import Workspace from "../../../services/Workspace";
 import SparkSummary from "../../../components/clusters/spark/SparkSummary";
 
@@ -32,6 +32,8 @@ const HDFSClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluster
     showedFetchMetricsErr: false,
     needFetch: false,
   });
+
+  const [isExpand, setExpand] = React.useState<boolean>(getLocalStorage("isHeaderExpand") ?? true);
 
   const [clusterView, setclusterView] = useState<{ activeTab: activeTab }>({
     activeTab: "fs",
@@ -125,6 +127,10 @@ const HDFSClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluster
     };
   }, []);
 
+  const getHeaderExpand = (isExpand: boolean) => {
+    setExpand(isExpand);
+  };
+
   return (
     <div className='workspace-wrapper dashboard-container'>
       <Skeleton avatar active loading={typeof clusterState.metric === "undefined"} paragraph={{ rows: 2 }}>
@@ -138,24 +144,18 @@ const HDFSClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluster
               handleClusterStop={onClusterStop}
               metric={clusterState.metric}
               downloadStatus={downloadStatus}
+              getHeaderExpand={getHeaderExpand}
             />
-            {clusterState.metric.status === "terminated_with_errors" && (
-              <Alert type='error' message={clusterState.metric.statusDetail} banner />
-            )}
+            {clusterState.metric.status === "terminated_with_errors" && <Alert type='error' message={clusterState.metric.statusDetail} banner />}
           </>
         )}
       </Skeleton>
 
-      <div className='tabs-section card-shadow-light' style={{ minHeight: "500px", backgroundColor: "#fff" }}>
+      <div className='tabs-section card-shadow-light' style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)", backgroundColor: "#fff" }}>
         <Tabs defaultActiveKey='fs' activeKey={clusterView.activeTab} onChange={onTabsChange} className='jobs-tabs cluster-tabs'>
           {clusterState.metric && clusterState.metric.status && (
-            <TabPane tab='Browse HDFS' key='fs' className='jobs-tab-pane' style={{ minHeight: "450px" }}>
-              <HDFSStorageFile
-                activeTab={clusterView.activeTab}
-                clusterId={clusterId}
-                status={clusterState.metric.status}
-                metric={clusterState.metric}
-              />
+            <TabPane tab='Browse HDFS' key='fs' className='jobs-tab-pane' style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
+              <HDFSStorageFile activeTab={clusterView.activeTab} clusterId={clusterId} status={clusterState.metric.status} metric={clusterState.metric} />
             </TabPane>
           )}
         </Tabs>
