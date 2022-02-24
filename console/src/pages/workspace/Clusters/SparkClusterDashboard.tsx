@@ -294,7 +294,7 @@ const SparkClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
               Refresh
             </Button>
           }>
-          <TabPane tab='Summary' key='summary' className='jobs-tab-pane' style={{ height: isExpand ? "calc(100vh - 265px)" : "calc(100vh - 220px)" }}>
+          <TabPane tab='Summary' key='summary' className='jobs-tab-pane' style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
             {clusterState.metric && clusterState.metric.status && clusterView.activeTab === "summary" && (
               <SparkSummary
                 orgSlugId={orgSlugId}
@@ -306,7 +306,7 @@ const SparkClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
               />
             )}
           </TabPane>
-          <TabPane tab='History' key='history' className='jobs-tab-pane' style={{ height: isExpand ? "calc(100vh - 265px)" : "calc(100vh - 220px)" }}>
+          <TabPane tab='History' key='history' className='jobs-tab-pane' style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
             {clusterState.metric && clusterState.metric.status && clusterView.activeTab === "history" && (
               <DeploymentHistoryTable
                 orgSlugId={orgSlugId}

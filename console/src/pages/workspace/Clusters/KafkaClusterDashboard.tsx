@@ -189,10 +189,10 @@ const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
               </Button>
             )
           }>
-          <TabPane tab='Brokers' key='broker' className='jobs-tab-pane' style={{ height: isExpand ? "calc(100vh - 265px)" : "calc(100vh - 220px)" }}>
+          <TabPane tab='Brokers' key='broker' className='jobs-tab-pane' style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
             {tabsView.activeTab === "broker" && <KafkaBrokersTable orgSlugId={orgSlugId} workspaceId={workspaceId} clusterId={clusterId} status={clusterState.metric?.status} />}
           </TabPane>
-          <TabPane tab='Topics' key='topic' className='jobs-tab-pane' style={{ height: isExpand ? "calc(100vh - 265px)" : "calc(100vh - 220px)" }}>
+          <TabPane tab='Topics' key='topic' className='jobs-tab-pane' style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
             {topicId === null && tabsView.activeTab === "topic" && (
               <KafkaTopicsTable
                 orgSlugId={orgSlugId}

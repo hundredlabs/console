@@ -245,7 +245,7 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
         <Content
           className='site-layout-background'
           style={{
-            padding: "20px 20px 20px 20px",
+            padding: "20px 20px 0px 20px",
             minHeight: 280,
           }}>
           {content}

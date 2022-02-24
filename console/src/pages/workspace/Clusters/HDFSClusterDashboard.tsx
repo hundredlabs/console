@@ -151,10 +151,10 @@ const HDFSClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluster
         )}
       </Skeleton>
 
-      <div className='tabs-section card-shadow-light' style={{ minHeight: "500px", backgroundColor: "#fff" }}>
+      <div className='tabs-section card-shadow-light' style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)", backgroundColor: "#fff" }}>
         <Tabs defaultActiveKey='fs' activeKey={clusterView.activeTab} onChange={onTabsChange} className='jobs-tabs cluster-tabs'>
           {clusterState.metric && clusterState.metric.status && (
-            <TabPane tab='Browse HDFS' key='fs' className='jobs-tab-pane' style={{ height: isExpand ? "calc(100vh - 265px)" : "calc(100vh - 220px)" }}>
+            <TabPane tab='Browse HDFS' key='fs' className='jobs-tab-pane' style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
               <HDFSStorageFile activeTab={clusterView.activeTab} clusterId={clusterId} status={clusterState.metric.status} metric={clusterState.metric} />
             </TabPane>
           )}
