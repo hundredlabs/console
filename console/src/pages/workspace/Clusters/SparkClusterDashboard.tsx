@@ -10,7 +10,7 @@ import WorkspaceService, { SparkClusterMetric, SparkClusterHistory, ServicePort,
 import ClusterHeader from "../../../components/clusters/ClusterHeader";
 import { history } from "../../../configureStore";
 import WebService from "../../../services/WebService";
-import { bytesToSize, getReadableTime, calculatePer } from "../../../services/Utils";
+import { bytesToSize, getReadableTime, calculatePer, getLocalStorage } from "../../../services/Utils";
 import type { ClusterStatus, Status } from "../../../services/Workspace";
 
 import moment from "moment";
@@ -122,29 +122,10 @@ const DeploymentHistoryTable: FC<{
         />
         <Column title='APP NAME' dataIndex='name' key='id' className='table-cell-light' />
 
-        <Column
-          title='STATUS'
-          dataIndex=''
-          key='status'
-          className='table-cell-light'
-          render={(v: SparkClusterHistory) => <StatusTag status={getHistoryStatus(v.attempts)} />}
-        />
+        <Column title='STATUS' dataIndex='' key='status' className='table-cell-light' render={(v: SparkClusterHistory) => <StatusTag status={getHistoryStatus(v.attempts)} />} />
 
-        <Column
-          title='DATE STARTED'
-          dataIndex=''
-          key='started'
-          className='table-cell-light'
-          render={(v: SparkClusterHistory) => startedCluster(v.attempts)}
-        />
-        <Column
-          title='RUNTIME'
-          dataIndex=''
-          align='center'
-          key='runtime'
-          className='table-cell-light'
-          render={(v: SparkClusterHistory) => getSparkClusterRuntime(v.attempts)}
-        />
+        <Column title='DATE STARTED' dataIndex='' key='started' className='table-cell-light' render={(v: SparkClusterHistory) => startedCluster(v.attempts)} />
+        <Column title='RUNTIME' dataIndex='' align='center' key='runtime' className='table-cell-light' render={(v: SparkClusterHistory) => getSparkClusterRuntime(v.attempts)} />
       </Table>
     </Skeleton>
   );
@@ -164,16 +145,13 @@ export interface IContainerState {
   containerId?: string;
 }
 
-const SparkClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; clusterId: number }> = ({
-  orgSlugId,
-  workspaceId,
-  clusterId,
-}) => {
+const SparkClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; clusterId: number }> = ({ orgSlugId, workspaceId, clusterId }) => {
   const [containerImage, setContainerImage] = useState<IContainerState>({
     environments: [],
     services: [],
     state: "inactive",
   });
+  const [isExpand, setExpand] = React.useState<boolean>(getLocalStorage("isHeaderExpand") ?? true);
 
   const [clusterState, setClusterState] = useState<{
     metric?: SparkClusterMetric;
@@ -278,6 +256,10 @@ const SparkClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
     };
   }, []);
 
+  const getHeaderExpand = (isExpand: boolean) => {
+    setExpand(isExpand);
+  };
+
   return (
     <div className='workspace-wrapper dashboard-container'>
       <Skeleton avatar active loading={typeof clusterState.metric === "undefined"} paragraph={{ rows: 2 }}>
@@ -291,10 +273,9 @@ const SparkClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
               handleClusterStop={onClusterStop}
               metric={clusterState.metric}
               downloadStatus={downloadStatus}
+              getHeaderExpand={getHeaderExpand}
             />
-            {clusterState.metric.status === "terminated_with_errors" && (
-              <Alert type='error' message={clusterState.metric.statusDetail} banner />
-            )}
+            {clusterState.metric.status === "terminated_with_errors" && <Alert type='error' message={clusterState.metric.statusDetail} banner />}
           </>
         )}
       </Skeleton>
@@ -313,7 +294,7 @@ const SparkClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
               Refresh
             </Button>
           }>
-          <TabPane tab='Summary' key='summary' className='jobs-tab-pane'>
+          <TabPane tab='Summary' key='summary' className='jobs-tab-pane' style={{ height: isExpand ? "calc(100vh - 265px)" : "calc(100vh - 220px)" }}>
             {clusterState.metric && clusterState.metric.status && clusterView.activeTab === "summary" && (
               <SparkSummary
                 orgSlugId={orgSlugId}
@@ -325,7 +306,7 @@ const SparkClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
               />
             )}
           </TabPane>
-          <TabPane tab='History' key='history' className='jobs-tab-pane'>
+          <TabPane tab='History' key='history' className='jobs-tab-pane' style={{ height: isExpand ? "calc(100vh - 265px)" : "calc(100vh - 220px)" }}>
             {clusterState.metric && clusterState.metric.status && clusterView.activeTab === "history" && (
               <DeploymentHistoryTable
                 orgSlugId={orgSlugId}

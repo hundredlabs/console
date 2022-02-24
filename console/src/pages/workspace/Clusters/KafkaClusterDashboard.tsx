@@ -8,7 +8,7 @@ import { SparkClusterMetric } from "../../../services/Workspace";
 import ClusterHeader from "../../../components/clusters/ClusterHeader";
 import { history } from "../../../configureStore";
 import WebService from "../../../services/WebService";
-import { bytesToSize, calculatePer } from "../../../services/Utils";
+import { bytesToSize, calculatePer, getLocalStorage } from "../../../services/Utils";
 
 import Workspace from "../../../services/Workspace";
 import KafkaBrokersTable from "../../../components/clusters/kafka/BrokersTable";
@@ -27,6 +27,7 @@ export interface DownloadStatus {
 const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; clusterId: number }> = ({ orgSlugId, workspaceId, clusterId }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [topicId, setTopicId] = useState<string>(null);
+  const [isExpand, setExpand] = React.useState<boolean>(getLocalStorage("isHeaderExpand") ?? true);
 
   const [topicBuilder, setTopicBuilder] = useState<{ showModal: boolean; hasTopicCreated: boolean }>({
     showModal: false,
@@ -150,6 +151,10 @@ const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
     }
   };
 
+  const getHeaderExpand = (isExpand: boolean) => {
+    setExpand(isExpand);
+  };
+
   return (
     <div className='workspace-wrapper dashboard-container'>
       <Skeleton avatar active loading={typeof clusterState.metric === "undefined"} paragraph={{ rows: 2 }}>
@@ -163,6 +168,7 @@ const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
               handleClusterStop={onClusterStop}
               metric={clusterState.metric}
               downloadStatus={downloadStatus}
+              getHeaderExpand={getHeaderExpand}
             />
             {clusterState.metric.status === "terminated_with_errors" && <Alert type='error' message={clusterState.metric.statusDetail} banner />}
           </>
@@ -183,10 +189,10 @@ const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
               </Button>
             )
           }>
-          <TabPane tab='Brokers' key='broker' className='jobs-tab-pane' style={{ minHeight: "50vh" }}>
+          <TabPane tab='Brokers' key='broker' className='jobs-tab-pane' style={{ height: isExpand ? "calc(100vh - 265px)" : "calc(100vh - 220px)" }}>
             {tabsView.activeTab === "broker" && <KafkaBrokersTable orgSlugId={orgSlugId} workspaceId={workspaceId} clusterId={clusterId} status={clusterState.metric?.status} />}
           </TabPane>
-          <TabPane tab='Topics' key='topic' className='jobs-tab-pane' style={{ minHeight: "50vh" }}>
+          <TabPane tab='Topics' key='topic' className='jobs-tab-pane' style={{ height: isExpand ? "calc(100vh - 265px)" : "calc(100vh - 220px)" }}>
             {topicId === null && tabsView.activeTab === "topic" && (
               <KafkaTopicsTable
                 orgSlugId={orgSlugId}
