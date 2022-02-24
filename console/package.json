@@ -11,7 +11,7 @@
     "antd-img-crop": "^3.14.1",
     "apexcharts": "^3.22.0",
     "babel-plugin-import": "^1.12.2",
-    "codemirror": "^5.50.0",
+    "codemirror": "^5.58.2",
     "connected-react-router": "^6.5.2",
     "customize-cra": "^0.8.0",
     "env-cmd": "^10.0.1",
