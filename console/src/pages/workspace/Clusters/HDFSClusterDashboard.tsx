@@ -12,7 +12,6 @@ import WebService from "../../../services/WebService";
 import { bytesToSize, calculatePer, getLocalStorage } from "../../../services/Utils";
 import Workspace from "../../../services/Workspace";
 import SparkSummary from "../../../components/clusters/spark/SparkSummary";
-import { useLocalStorage } from "../../../components/utils/customHook/customHook";
 
 const { TabPane } = Tabs;
 
