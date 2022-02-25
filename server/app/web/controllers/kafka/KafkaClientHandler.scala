@@ -6,10 +6,10 @@ import java.util.Properties
 import java.util.concurrent.CompletableFuture
 
 import com.gigahex.commons.models.RunStatus
-import web.models.cluster.{KafkaNode, KafkaProcesses, PartitionDetails, TopicConfiguration, TopicDetails, TopicMessage}
+import web.models.cluster.{ConsumerGroupInfo, ConsumerMember, KafkaNode, KafkaProcesses, PartitionDetails, TopicConfiguration, TopicDetails, TopicMessage}
 
 import scala.jdk.FutureConverters._
-import org.apache.kafka.clients.admin.{Admin, AdminClientConfig, ReplicaInfo}
+import org.apache.kafka.clients.admin.{Admin, AdminClientConfig, OffsetSpec, ReplicaInfo}
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.config.ConfigResource
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -21,6 +21,7 @@ import play.api.mvc.{Result, Results}
 import web.models.InternalServerErrorResponse
 import web.services.ClusterService
 
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -252,6 +253,60 @@ trait KafkaClientHandler {
     }
   }
 
+  def getConsumerGroups(admin: Admin)(implicit ec: ExecutionContext): Future[Seq[ConsumerGroupInfo]] = {
+    admin.listConsumerGroups()
+      .all()
+      .toCompletableFuture
+      .asScala
+      .flatMap { cgs =>
+        val groupIds = cgs.asScala.toList.map(cgl => cgl.groupId())
+        admin.describeConsumerGroups(groupIds.asJavaCollection)
+          .all()
+          .toCompletableFuture
+          .asScala
+          .flatMap{ consumerGroups =>
+            val result = consumerGroups.asScala.map{
+              case (groupId, description) =>
+                val tps = description.members().asScala.toList.flatMap(_.assignment().topicPartitions().asScala)
+                val topicSpecMap =  mutable.Map[TopicPartition, OffsetSpec]()
+                tps.foreach(tp => topicSpecMap.addOne((tp, OffsetSpec.latest())))
+
+                for {
+                  topicOffsets <- admin.listOffsets(topicSpecMap.asJava).all()
+                    .toCompletableFuture
+                    .asScala
+                  consumerOffsets <- admin.listConsumerGroupOffsets(groupId)
+                    .partitionsToOffsetAndMetadata()
+                    .toCompletableFuture
+                    .asScala
+                } yield {
+
+                  val netLag = topicOffsets.asScala.foldLeft(0L){
+                    case (currentLag, (tp, ofs)) =>
+                      val consumedOffset = consumerOffsets.get(tp)
+                      if(consumedOffset != null){
+                        currentLag + (ofs.offset() - consumedOffset.offset())
+                      } else currentLag
+                  }
+
+                  val groupInfo = ConsumerGroupInfo(groupId, description.coordinator().id(), netLag, description.state().toString, Seq.empty[ConsumerMember])
+                  val groupMembers = description.members().asScala.flatMap{ md =>
+                    md.assignment().topicPartitions().asScala.map { tp =>
+                      ConsumerMember(
+                        assignedMember = md.clientId(),
+                        partition = tp.partition(),
+                        topicPartitionOffset = topicOffsets.get(tp).offset(),
+                        consumerOffsets.get(tp).offset()
+                      )
+                    }
+                  }.toSeq
+                  groupInfo.copy(members = groupMembers)
+                }
+            }
+            Future.sequence(result.toSeq)
+          }
+      }
+  }
   implicit class KafkaFutureToCompletableFuture[T](kafkaFuture: KafkaFuture[T]) {
     def toCompletableFuture: CompletableFuture[T] = {
       val wrappingFuture = new CompletableFuture[T]

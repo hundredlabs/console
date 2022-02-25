@@ -6,7 +6,15 @@ import com.mohiva.play.silhouette.api.Silhouette
 import controllers.AssetsFinder
 import javax.inject.{Inject, Named}
 import web.models.{ErrorResponse, InternalServerErrorResponse}
-import web.models.cluster.{ConsumerGroupInfo, ConsumerMember, KafkaClusterJsonFormatter, KafkaConfigurationRequest, KafkaNode, KafkaProcesses, TopicConfig}
+import web.models.cluster.{
+  ConsumerGroupInfo,
+  ConsumerMember,
+  KafkaClusterJsonFormatter,
+  KafkaConfigurationRequest,
+  KafkaNode,
+  KafkaProcesses,
+  TopicConfig
+}
 import web.services.{ClusterService, MemberService}
 import play.api.cache.SyncCacheApi
 
@@ -60,10 +68,11 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
           clusterService
             .saveLocalKafkaConfiguration(request.body, profile.workspaceId, workspaceKeyCache)
             .map(result => {
-              if(result > 0){
+              if (result > 0) {
                 Created(Json.toJson(Map("clusterId" -> result)))
               } else {
-                BadRequest(Json.toJson(Map("error" -> "There is already an existing Kafka service installed on this host. Delete it before proceeding.")))
+                BadRequest(Json.toJson(
+                  Map("error" -> "There is already an existing Kafka service installed on this host. Delete it before proceeding.")))
               }
             })
             .recoverWith {
@@ -127,9 +136,8 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
                 v.processes.find(_.name.equals(KafkaProcesses.KAFKA_SERVER)) match {
 
                   case Some(p) if p.status == RunStatus.Running =>
-
                     withAdmin(p.host, p.port) { admin =>
-                     val result =  admin
+                      val result = admin
                         .describeCluster()
                         .nodes()
                         .toCompletableFuture
@@ -154,67 +162,18 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
     }
   }
 
-
+  /**
+    * List the consumer group and the respective members
+    * @param clusterId
+    * @return
+    */
   def listConsumerGroups(clusterId: Long) = silhouette.UserAwareAction.async { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>
       if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
-        withKafkaCluster(clusterService, clusterId, profile.workspaceId){ admin =>
-           val futureConsumerGroups = admin.listConsumerGroups()
-            .all()
-            .toCompletableFuture
-            .asScala
-            .flatMap { cgs =>
-              val groupIds = cgs.asScala.toList.map(cgl => cgl.groupId())
-              admin.describeConsumerGroups(groupIds.asJavaCollection)
-                .all()
-                .toCompletableFuture
-                .asScala
-                .flatMap{ consumerGroups =>
-                  val result = consumerGroups.asScala.map{
-                  case (groupId, description) =>
-                    val tps = description.members().asScala.toList.flatMap(_.assignment().topicPartitions().asScala)
-                    val topicSpecMap =  mutable.Map[TopicPartition, OffsetSpec]()
-                    tps.foreach(tp => topicSpecMap.addOne((tp, OffsetSpec.latest())))
-
-                     for {
-                      topicOffsets <- admin.listOffsets(topicSpecMap.asJava).all()
-                        .toCompletableFuture
-                        .asScala
-                      consumerOffsets <- admin.listConsumerGroupOffsets(groupId)
-                        .partitionsToOffsetAndMetadata()
-                        .toCompletableFuture
-                        .asScala
-                    } yield {
-
-                      val netLag = topicOffsets.asScala.foldLeft(0L){
-                        case (currentLag, (tp, ofs)) =>
-                          val consumedOffset = consumerOffsets.get(tp)
-                         if(consumedOffset != null){
-                           currentLag + (ofs.offset() - consumedOffset.offset())
-                         } else currentLag
-                      }
-
-                      val groupInfo = ConsumerGroupInfo(groupId, description.coordinator().id(), netLag, description.state().toString, Seq.empty[ConsumerMember])
-                      val groupMembers = description.members().asScala.flatMap{ md =>
-                        md.assignment().topicPartitions().asScala.map { tp =>
-                          ConsumerMember(
-                            assignedMember = md.clientId(),
-                            partition = tp.partition(),
-                            topicPartitionOffset = topicOffsets.get(tp).offset(),
-                            consumerOffsets.get(tp).offset()
-                          )
-                        }
-                      }.toSeq
-                      groupInfo.copy(members = groupMembers)
-                    }
-                }
-                  Future.sequence(result.toSeq)
-                }
-            }
+        withKafkaCluster(clusterService, clusterId, profile.workspaceId) { admin =>
+          val futureConsumerGroups = getConsumerGroups(admin)
           futureConsumerGroups.map(cg => Ok(Json.toJson(cg)))
-
-        }
-          .recoverWith {
+        }.recoverWith {
             case e: Exception =>
               e.printStackTrace()
               Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
@@ -224,7 +183,6 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
       }
     }
   }
-
 
   def listTopicPartitions(clusterId: Long, topic: String) = silhouette.UserAwareAction.async { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>
@@ -245,7 +203,7 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
                     }
                   case _ => Future(NotFound)
                 }
-            })
+          })
           .recoverWith {
             case e: Exception =>
               e.printStackTrace()
@@ -276,7 +234,7 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
                     }
                   case _ => Future(NotFound)
                 }
-            })
+          })
           .recoverWith {
             case e: Exception =>
               e.printStackTrace()
@@ -287,9 +245,6 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
       }
     }
   }
-
-
-
 
   /**
     * List all the topics in the given kafka cluster
@@ -309,7 +264,7 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
 
                   case Some(p) if p.status == RunStatus.Running =>
                     withAdmin(p.host, p.port) { admin =>
-                     val result = getTopicSummary(admin, p.host, p.port).map(tds => Ok(Json.toJson(tds)))
+                      val result = getTopicSummary(admin, p.host, p.port).map(tds => Ok(Json.toJson(tds)))
                       result.onComplete(_ => admin.close())
                       result
                     }
@@ -351,7 +306,7 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
                     }
                   case _ => Future(NotFound)
                 }
-            })
+          })
           .recoverWith {
             case e: Exception =>
               e.printStackTrace()
@@ -380,7 +335,6 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
                 v.processes.find(_.name.equals(KafkaProcesses.KAFKA_SERVER)) match {
 
                   case Some(p) if p.status == RunStatus.Running =>
-
                     withAdmin(p.host, p.port) { admin =>
                       val topic = new NewTopic(request.body.name, request.body.partitions, request.body.replicationFactor)
                       val result = admin
