@@ -6,7 +6,15 @@ import com.mohiva.play.silhouette.api.Silhouette
 import controllers.AssetsFinder
 import javax.inject.{Inject, Named}
 import web.models.{ErrorResponse, InternalServerErrorResponse}
-import web.models.cluster.{KafkaClusterJsonFormatter, KafkaConfigurationRequest, KafkaNode, KafkaProcesses, TopicConfig}
+import web.models.cluster.{
+  ConsumerGroupInfo,
+  ConsumerMember,
+  KafkaClusterJsonFormatter,
+  KafkaConfigurationRequest,
+  KafkaNode,
+  KafkaProcesses,
+  TopicConfig
+}
 import web.services.{ClusterService, MemberService}
 import play.api.cache.SyncCacheApi
 
@@ -23,9 +31,11 @@ import concurrent.duration._
 import akka.stream.scaladsl.Source
 import com.gigahex.commons.models.RunStatus
 import web.models
-import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.admin.{NewTopic, OffsetSpec}
+import org.apache.kafka.common.TopicPartition
 import web.controllers.handlers.SecuredWebRequestHandler
 
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
 class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterManager: ActorRef,
@@ -58,10 +68,11 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
           clusterService
             .saveLocalKafkaConfiguration(request.body, profile.workspaceId, workspaceKeyCache)
             .map(result => {
-              if(result > 0){
+              if (result > 0) {
                 Created(Json.toJson(Map("clusterId" -> result)))
               } else {
-                BadRequest(Json.toJson(Map("error" -> "There is already an existing Kafka service installed on this host. Delete it before proceeding.")))
+                BadRequest(Json.toJson(
+                  Map("error" -> "There is already an existing Kafka service installed on this host. Delete it before proceeding.")))
               }
             })
             .recoverWith {
@@ -125,9 +136,8 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
                 v.processes.find(_.name.equals(KafkaProcesses.KAFKA_SERVER)) match {
 
                   case Some(p) if p.status == RunStatus.Running =>
-
                     withAdmin(p.host, p.port) { admin =>
-                     val result =  admin
+                      val result = admin
                         .describeCluster()
                         .nodes()
                         .toCompletableFuture
@@ -152,6 +162,28 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
     }
   }
 
+  /**
+    * List the consumer group and the respective members
+    * @param clusterId
+    * @return
+    */
+  def listConsumerGroups(clusterId: Long) = silhouette.UserAwareAction.async { implicit request =>
+    handleMemberRequest(request, memberService) { (roles, profile) =>
+      if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
+        withKafkaCluster(clusterService, clusterId, profile.workspaceId) { admin =>
+          val futureConsumerGroups = getConsumerGroups(admin)
+          futureConsumerGroups.map(cg => Ok(Json.toJson(cg)))
+        }.recoverWith {
+            case e: Exception =>
+              e.printStackTrace()
+              Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
+          }
+      } else {
+        Future.successful(Forbidden)
+      }
+    }
+  }
+
   def listTopicPartitions(clusterId: Long, topic: String) = silhouette.UserAwareAction.async { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>
       if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
@@ -165,13 +197,13 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
 
                   case Some(p) if p.status == RunStatus.Running =>
                     withAdmin(p.host, p.port) { admin =>
-                      val result = getTopicPartitions(admin, topic, p.host, p.port).map(tps => Ok(Json.toJson(tps)))
+                      val result = getTopicPartitions(admin, topic).map(tps => Ok(Json.toJson(tps)))
                       result.onComplete(_ => admin.close())
                       result
                     }
                   case _ => Future(NotFound)
                 }
-            })
+          })
           .recoverWith {
             case e: Exception =>
               e.printStackTrace()
@@ -196,13 +228,13 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
 
                   case Some(p) if p.status == RunStatus.Running =>
                     withAdmin(p.host, p.port) { admin =>
-                      val result = getTopicMessages(admin, topic, p.host, p.port).map(messages => Ok(Json.toJson(messages)))
+                      val result = getTopicMessages(admin, topic).map(messages => Ok(Json.toJson(messages)))
                       result.onComplete(_ => admin.close())
                       result
                     }
                   case _ => Future(NotFound)
                 }
-            })
+          })
           .recoverWith {
             case e: Exception =>
               e.printStackTrace()
@@ -213,9 +245,6 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
       }
     }
   }
-
-
-
 
   /**
     * List all the topics in the given kafka cluster
@@ -235,7 +264,7 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
 
                   case Some(p) if p.status == RunStatus.Running =>
                     withAdmin(p.host, p.port) { admin =>
-                     val result = getTopicSummary(admin, p.host, p.port).map(tds => Ok(Json.toJson(tds)))
+                      val result = getTopicSummary(admin, p.host, p.port).map(tds => Ok(Json.toJson(tds)))
                       result.onComplete(_ => admin.close())
                       result
                     }
@@ -277,7 +306,7 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
                     }
                   case _ => Future(NotFound)
                 }
-            })
+          })
           .recoverWith {
             case e: Exception =>
               e.printStackTrace()
@@ -306,7 +335,6 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
                 v.processes.find(_.name.equals(KafkaProcesses.KAFKA_SERVER)) match {
 
                   case Some(p) if p.status == RunStatus.Running =>
-
                     withAdmin(p.host, p.port) { admin =>
                       val topic = new NewTopic(request.body.name, request.body.partitions, request.body.replicationFactor)
                       val result = admin

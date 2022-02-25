@@ -23,6 +23,7 @@ PUT        /web/v1/kafka/:clusterId/topics                      web.controllers.
 GET        /web/v1/kafka/:clusterId/topics/:topic/partitions    web.controllers.kafka.KafkaClusterController.listTopicPartitions(clusterId: Long, topic: String)
 GET        /web/v1/kafka/:clusterId/topics/:topic/messages      web.controllers.kafka.KafkaClusterController.listTopicMessages(clusterId: Long, topic: String)
 GET        /web/v1/kafka/:clusterId/topics/:topic/configs       web.controllers.kafka.KafkaClusterController.listTopicConfigurations(clusterId: Long, topic: String)
+GET        /web/v1/kafka/:clusterId/consumer-groups             web.controllers.kafka.KafkaClusterController.listConsumerGroups(clusterId: Long)
 
 #HDFS Cluster
 PUT        /web/v1/hdfs-cluster                                 web.controllers.hdfs.HDFSController.saveLocalHDFSClusterConfig
