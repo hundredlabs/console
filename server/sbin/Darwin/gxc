@@ -44,7 +44,7 @@ function start()
     fi
     export JAVA_HOME=/usr/local/opt/openjdk@11/libexec/openjdk.jdk/Contents/Home
     export JAVA_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED"
-    {GHX_HOME}/gigahex-server-$VERSION/bin/gigahex-server -Dconfig.resource=application.mac.conf -Dhttp.port=9000
+    ${GHX_HOME}/gigahex-server-$VERSION/bin/gigahex-server -Dconfig.resource=application.mac.conf -Dhttp.port=9000
 
 }
 

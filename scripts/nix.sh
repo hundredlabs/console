@@ -21,7 +21,7 @@ RELEASE_VER="0.3.0"
 INSTALL_DIR=${HOME}/gigahex
 PACKAGE_NAME=gigahex-server
 BIN_PATH=${INSTALL_DIR}/bin/gxc
-DOWNLOAD_URL=https://packages.gigahex.com/releases/community/${PACKAGE_NAME}-${RELEASE_VER}.tgz
+DOWNLOAD_URL=https://github.com/GigahexHQ/gigahex/releases/download/v${RELEASE_VER}/gigahex-server-${RELEASE_VER}.tgz
 
 cmd_exists() {
 	command -v "$@" > /dev/null 2>&1

@@ -73,7 +73,7 @@ class ExternalProcessRunner(cmd: Seq[String], showLogs: Boolean) extends LazyLog
     Try {
       val pb = new lang.ProcessBuilder(cmd: _*)
       logger.info(s"Java home: ${System.getProperty("java.home")}")
-      pb.environment().put("JAVA_HOME", "/Library/Java/JavaVirtualMachines/graalvm-ce-java8-20.1.0/Contents/Home")
+      pb.environment().put("JAVA_HOME", System.getProperty("java.home"))
       val process = pb.start()
 
 
