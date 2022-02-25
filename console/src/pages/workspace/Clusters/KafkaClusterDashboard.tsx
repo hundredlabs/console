@@ -14,9 +14,10 @@ import Workspace from "../../../services/Workspace";
 import KafkaBrokersTable from "../../../components/clusters/kafka/BrokersTable";
 import { KafkaTopicsTable } from "../../../components/clusters/kafka/TopicTable";
 import TopicsDetails from "../../../components/clusters/kafka/TopicsDetails";
+import ConsumerGroups from "../../../components/clusters/kafka/ConsumerGroups";
 
 const { TabPane } = Tabs;
-export type activeTab = "broker" | "topic";
+export type activeTab = "broker" | "topic" | "consumer-groups";
 
 export interface DownloadStatus {
   downPer: number;
@@ -204,6 +205,9 @@ const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
               />
             )}
             {topicId && <TopicsDetails orgSlugId={orgSlugId} workspaceId={workspaceId} clusterId={clusterId} status={clusterState.metric?.status} topic={topicId} removeTopicId={removeTopic} />}
+          </TabPane>
+          <TabPane tab='Consumer Groups' key='consumer-groups' className='jobs-tab-pane' style={{ minHeight: true ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
+            <ConsumerGroups orgSlugId={orgSlugId} workspaceId={workspaceId} clusterId={clusterId} status={clusterState.metric?.status} />
           </TabPane>
         </Tabs>
         <Modal
