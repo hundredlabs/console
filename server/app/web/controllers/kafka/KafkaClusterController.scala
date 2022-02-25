@@ -6,7 +6,7 @@ import com.mohiva.play.silhouette.api.Silhouette
 import controllers.AssetsFinder
 import javax.inject.{Inject, Named}
 import web.models.{ErrorResponse, InternalServerErrorResponse}
-import web.models.cluster.{KafkaClusterJsonFormatter, KafkaConfigurationRequest, KafkaNode, KafkaProcesses, TopicConfig}
+import web.models.cluster.{ConsumerGroupInfo, ConsumerMember, KafkaClusterJsonFormatter, KafkaConfigurationRequest, KafkaNode, KafkaProcesses, TopicConfig}
 import web.services.{ClusterService, MemberService}
 import play.api.cache.SyncCacheApi
 
@@ -23,9 +23,11 @@ import concurrent.duration._
 import akka.stream.scaladsl.Source
 import com.gigahex.commons.models.RunStatus
 import web.models
-import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.admin.{NewTopic, OffsetSpec}
+import org.apache.kafka.common.TopicPartition
 import web.controllers.handlers.SecuredWebRequestHandler
 
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
 class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterManager: ActorRef,
@@ -152,6 +154,78 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
     }
   }
 
+
+  def listConsumerGroups(clusterId: Long) = silhouette.UserAwareAction.async { implicit request =>
+    handleMemberRequest(request, memberService) { (roles, profile) =>
+      if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
+        withKafkaCluster(clusterService, clusterId, profile.workspaceId){ admin =>
+           val futureConsumerGroups = admin.listConsumerGroups()
+            .all()
+            .toCompletableFuture
+            .asScala
+            .flatMap { cgs =>
+              val groupIds = cgs.asScala.toList.map(cgl => cgl.groupId())
+              admin.describeConsumerGroups(groupIds.asJavaCollection)
+                .all()
+                .toCompletableFuture
+                .asScala
+                .flatMap{ consumerGroups =>
+                  val result = consumerGroups.asScala.map{
+                  case (groupId, description) =>
+                    val tps = description.members().asScala.toList.flatMap(_.assignment().topicPartitions().asScala)
+                    val topicSpecMap =  mutable.Map[TopicPartition, OffsetSpec]()
+                    tps.foreach(tp => topicSpecMap.addOne((tp, OffsetSpec.latest())))
+
+                     for {
+                      topicOffsets <- admin.listOffsets(topicSpecMap.asJava).all()
+                        .toCompletableFuture
+                        .asScala
+                      consumerOffsets <- admin.listConsumerGroupOffsets(groupId)
+                        .partitionsToOffsetAndMetadata()
+                        .toCompletableFuture
+                        .asScala
+                    } yield {
+
+                      val netLag = topicOffsets.asScala.foldLeft(0L){
+                        case (currentLag, (tp, ofs)) =>
+                          val consumedOffset = consumerOffsets.get(tp)
+                         if(consumedOffset != null){
+                           currentLag + (ofs.offset() - consumedOffset.offset())
+                         } else currentLag
+                      }
+
+                      val groupInfo = ConsumerGroupInfo(groupId, description.coordinator().id(), netLag, description.state().toString, Seq.empty[ConsumerMember])
+                      val groupMembers = description.members().asScala.flatMap{ md =>
+                        md.assignment().topicPartitions().asScala.map { tp =>
+                          ConsumerMember(
+                            assignedMember = md.clientId(),
+                            partition = tp.partition(),
+                            topicPartitionOffset = topicOffsets.get(tp).offset(),
+                            consumerOffsets.get(tp).offset()
+                          )
+                        }
+                      }.toSeq
+                      groupInfo.copy(members = groupMembers)
+                    }
+                }
+                  Future.sequence(result.toSeq)
+                }
+            }
+          futureConsumerGroups.map(cg => Ok(Json.toJson(cg)))
+
+        }
+          .recoverWith {
+            case e: Exception =>
+              e.printStackTrace()
+              Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
+          }
+      } else {
+        Future.successful(Forbidden)
+      }
+    }
+  }
+
+
   def listTopicPartitions(clusterId: Long, topic: String) = silhouette.UserAwareAction.async { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>
       if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
@@ -165,7 +239,7 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
 
                   case Some(p) if p.status == RunStatus.Running =>
                     withAdmin(p.host, p.port) { admin =>
-                      val result = getTopicPartitions(admin, topic, p.host, p.port).map(tps => Ok(Json.toJson(tps)))
+                      val result = getTopicPartitions(admin, topic).map(tps => Ok(Json.toJson(tps)))
                       result.onComplete(_ => admin.close())
                       result
                     }
@@ -196,7 +270,7 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
 
                   case Some(p) if p.status == RunStatus.Running =>
                     withAdmin(p.host, p.port) { admin =>
-                      val result = getTopicMessages(admin, topic, p.host, p.port).map(messages => Ok(Json.toJson(messages)))
+                      val result = getTopicMessages(admin, topic).map(messages => Ok(Json.toJson(messages)))
                       result.onComplete(_ => admin.close())
                       result
                     }
