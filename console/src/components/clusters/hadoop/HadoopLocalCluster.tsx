@@ -5,7 +5,11 @@ import { history } from "../../../configureStore";
 import { FormInstance } from "antd/lib/form";
 const { Option } = Select;
 
-const HadoopLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; workspaceId: number }> = ({ clusterForm, orgSlugId, workspaceId }) => {
+const HadoopLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; workspaceId: number }> = ({
+  clusterForm,
+  orgSlugId,
+  workspaceId,
+}) => {
   const [builder, setBuilder] = useState<{
     versions: string[];
     clusterManagers: string[];
@@ -102,7 +106,7 @@ const HadoopLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; wor
           style={{ width: "100%" }}
           placeholder='Choose a version'
           className='ant-select-selector-light'
-          onSelect={(v) => {
+          onSelect={(v: any) => {
             clusterForm.setFieldsValue({ selectedHdfsVersion: v.toString() });
             setBuilder({ ...builder, selectedHdfsVersion: v.toString() });
           }}
@@ -122,7 +126,11 @@ const HadoopLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; wor
         <Input.TextArea rows={4} value={hdfsSite} className='ant-select-selector-light' placeholder={`key3 = value3  \nkey4 = value 4`} onChange={(e) => setHdfsSite(e.target.value)} />
       </Form.Item> */}
 
-      <Button type='primary' loading={builder.loading} onClick={(e) => saveSandboxCluster()} className='btn-action btn-next btn-action-light'>
+      <Button
+        type='primary'
+        loading={builder.loading}
+        onClick={(e) => saveSandboxCluster()}
+        className='btn-action btn-next btn-action-light'>
         Save
       </Button>
     </>

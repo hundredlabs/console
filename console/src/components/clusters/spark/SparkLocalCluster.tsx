@@ -5,7 +5,11 @@ import { history } from "../../../configureStore";
 import { FormInstance } from "antd/lib/form";
 const { Option } = Select;
 
-const SparkLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; workspaceId: number }> = ({ clusterForm, orgSlugId, workspaceId }) => {
+const SparkLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; workspaceId: number }> = ({
+  clusterForm,
+  orgSlugId,
+  workspaceId,
+}) => {
   const [builder, setBuilder] = useState<{
     versions: string[];
     clusterManagers: string[];
@@ -86,7 +90,7 @@ const SparkLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; work
           style={{ width: "100%" }}
           placeholder='Choose a version'
           className='ant-select-selector-light'
-          onSelect={(v) => {
+          onSelect={(v: any) => {
             clusterForm.setFieldsValue({ selectedPackageVersion: v.toString() });
             setBuilder({ ...builder, selectedPackageVersion: v.toString() });
           }}
@@ -101,7 +105,10 @@ const SparkLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; work
 
       {builder.selectedPackageVersion && (
         <>
-          <Form.Item label='Choose Cluster Manager' name='clusterManager' rules={[{ required: true, message: "Choose atleast one service" }]}>
+          <Form.Item
+            label='Choose Cluster Manager'
+            name='clusterManager'
+            rules={[{ required: true, message: "Choose atleast one service" }]}>
             <Radio.Group
               value='Spark Standalone'
               className='service-options'
@@ -129,7 +136,11 @@ const SparkLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; work
           </Form.Item>
         </>
       )}
-      <Button type='primary' loading={builder.loading} onClick={(e) => saveSandboxCluster()} className='btn-action btn-next btn-action-light'>
+      <Button
+        type='primary'
+        loading={builder.loading}
+        onClick={(e) => saveSandboxCluster()}
+        className='btn-action btn-next btn-action-light'>
         Save
       </Button>
     </>

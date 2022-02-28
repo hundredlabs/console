@@ -5,7 +5,11 @@ import { history } from "../../../configureStore";
 import { FormInstance } from "antd/lib/form";
 const { Option } = Select;
 
-const KafkaLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; workspaceId: number }> = ({ clusterForm, orgSlugId, workspaceId }) => {
+const KafkaLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; workspaceId: number }> = ({
+  clusterForm,
+  orgSlugId,
+  workspaceId,
+}) => {
   const [builder, setBuilder] = useState<{
     kafkaVerison: string[];
     scalaVerison: string[];
@@ -61,7 +65,7 @@ const KafkaLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; work
           style={{ width: "100%" }}
           placeholder='Choose a version'
           className='ant-select-selector-light'
-          onSelect={(v) => {
+          onSelect={(v: any) => {
             clusterForm.setFieldsValue({ kafkaVersion: v.toString() });
             setBuilder({ ...builder, selectedKafkaVersion: v.toString() });
           }}
@@ -78,7 +82,7 @@ const KafkaLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; work
           style={{ width: "100%" }}
           placeholder='Choose a version'
           className='ant-select-selector-light'
-          onSelect={(v) => {
+          onSelect={(v: any) => {
             clusterForm.setFieldsValue({ scalaVersion: v.toString() });
             setBuilder({ ...builder, selectedScalaVersion: v.toString() });
           }}
@@ -91,7 +95,11 @@ const KafkaLocalCluster: FC<{ clusterForm: FormInstance; orgSlugId: string; work
         </Select>
       </Form.Item>
 
-      <Button type='primary' loading={builder.loading} onClick={(e) => saveSandboxCluster()} className='btn-action btn-next btn-action-light'>
+      <Button
+        type='primary'
+        loading={builder.loading}
+        onClick={(e) => saveSandboxCluster()}
+        className='btn-action btn-next btn-action-light'>
         Save
       </Button>
     </>
