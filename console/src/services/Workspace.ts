@@ -303,6 +303,19 @@ export interface TopicMessage {
   message: string;
   timestamp: number;
 }
+export interface ConsumerMember {
+  assignedMember: string;
+  partition: number;
+  topicPartitionOffset: number;
+  consumedOffset: number;
+}
+export interface ConsumerGroupInfo {
+  id: string;
+  coordinator: number;
+  lag: number;
+  state: string;
+  members: ConsumerMember[];
+}
 
 export interface CreateTopicResponse {}
 
@@ -686,6 +699,26 @@ class WorkspaceService extends IErrorHandler {
         this.showError(body.message);
       } else {
         const err = this.getDefaultError("Fetching the Spark Cluster metric");
+        this.showError(err.message);
+      }
+    } catch (e) {}
+  };
+
+  getKafkaConsumerGroups = async (cId: number, onSuccess: (topic: ConsumerGroupInfo[]) => void) => {
+    try {
+      const response = this.webAPI.get<ConsumerGroupInfo[] | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/kafka/${cId}/consumer-groups`
+      );
+
+      const r = await response;
+      if (r.parsedBody) {
+        const result = r.parsedBody as ConsumerGroupInfo[];
+        onSuccess(result);
+      } else if (r.status === 400 && r.parsedBody) {
+        const body = r.parsedBody as IllegalParam;
+        this.showError(body.message);
+      } else {
+        const err = this.getDefaultError("Fetching the Kafka Cluster ");
         this.showError(err.message);
       }
     } catch (e) {}

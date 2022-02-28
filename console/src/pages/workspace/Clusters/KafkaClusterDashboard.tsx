@@ -25,7 +25,11 @@ export interface DownloadStatus {
   totalValue: string;
 }
 
-const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; clusterId: number }> = ({ orgSlugId, workspaceId, clusterId }) => {
+const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; clusterId: number }> = ({
+  orgSlugId,
+  workspaceId,
+  clusterId,
+}) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [topicId, setTopicId] = useState<string>(null);
   const [isExpand, setExpand] = React.useState<boolean>(getLocalStorage("isHeaderExpand") ?? true);
@@ -171,7 +175,9 @@ const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
               downloadStatus={downloadStatus}
               getHeaderExpand={getHeaderExpand}
             />
-            {clusterState.metric.status === "terminated_with_errors" && <Alert type='error' message={clusterState.metric.statusDetail} banner />}
+            {clusterState.metric.status === "terminated_with_errors" && (
+              <Alert type='error' message={clusterState.metric.statusDetail} banner />
+            )}
           </>
         )}
       </Skeleton>
@@ -185,15 +191,33 @@ const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
           className='jobs-tabs cluster-tabs'
           tabBarExtraContent={
             tabsView.activeTab === "topic" && (
-              <Button type='primary' onClick={() => setTopicBuilder({ showModal: true, hasTopicCreated: false })} disabled={clusterState.metric && clusterState.metric.status !== "running"}>
+              <Button
+                type='primary'
+                onClick={() => setTopicBuilder({ showModal: true, hasTopicCreated: false })}
+                disabled={clusterState.metric && clusterState.metric.status !== "running"}>
                 Create Topic
               </Button>
             )
           }>
-          <TabPane tab='Brokers' key='broker' className='jobs-tab-pane' style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
-            {tabsView.activeTab === "broker" && <KafkaBrokersTable orgSlugId={orgSlugId} workspaceId={workspaceId} clusterId={clusterId} status={clusterState.metric?.status} />}
+          <TabPane
+            tab='Brokers'
+            key='broker'
+            className='jobs-tab-pane'
+            style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
+            {tabsView.activeTab === "broker" && (
+              <KafkaBrokersTable
+                orgSlugId={orgSlugId}
+                workspaceId={workspaceId}
+                clusterId={clusterId}
+                status={clusterState.metric?.status}
+              />
+            )}
           </TabPane>
-          <TabPane tab='Topics' key='topic' className='jobs-tab-pane' style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
+          <TabPane
+            tab='Topics'
+            key='topic'
+            className='jobs-tab-pane'
+            style={{ minHeight: isExpand ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
             {topicId === null && tabsView.activeTab === "topic" && (
               <KafkaTopicsTable
                 orgSlugId={orgSlugId}
@@ -204,10 +228,25 @@ const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
                 onSelectTopic={onSelectTopic}
               />
             )}
-            {topicId && <TopicsDetails orgSlugId={orgSlugId} workspaceId={workspaceId} clusterId={clusterId} status={clusterState.metric?.status} topic={topicId} removeTopicId={removeTopic} />}
+            {topicId && (
+              <TopicsDetails
+                orgSlugId={orgSlugId}
+                workspaceId={workspaceId}
+                clusterId={clusterId}
+                status={clusterState.metric?.status}
+                topic={topicId}
+                removeTopicId={removeTopic}
+              />
+            )}
           </TabPane>
-          <TabPane tab='Consumer Groups' key='consumer-groups' className='jobs-tab-pane' style={{ minHeight: true ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
-            <ConsumerGroups orgSlugId={orgSlugId} workspaceId={workspaceId} clusterId={clusterId} status={clusterState.metric?.status} />
+          <TabPane
+            tab='Consumer Groups'
+            key='consumer-groups'
+            className='jobs-tab-pane'
+            style={{ minHeight: true ? "calc(100vh - 245px)" : "calc(100vh - 200px)" }}>
+            {tabsView.activeTab === "consumer-groups" && (
+              <ConsumerGroups orgSlugId={orgSlugId} workspaceId={workspaceId} clusterId={clusterId} status={clusterState.metric?.status} />
+            )}
           </TabPane>
         </Tabs>
         <Modal
@@ -220,14 +259,27 @@ const KafkaClusterDashboard: FC<{ orgSlugId: string; workspaceId: number; cluste
             setTopicBuilder({ showModal: false, hasTopicCreated: false });
             topicForm.resetFields();
           }}>
-          <Form layout={"vertical"} name='topic-form' requiredMark={false} initialValues={{ replicas: 1, partitions: 1 }} form={topicForm} onFinish={onCreateTopic} className='kafka-topic-form'>
+          <Form
+            layout={"vertical"}
+            name='topic-form'
+            requiredMark={false}
+            initialValues={{ replicas: 1, partitions: 1 }}
+            form={topicForm}
+            onFinish={onCreateTopic}
+            className='kafka-topic-form'>
             <Form.Item name='name' label='Name' rules={[{ required: true, message: "Please enter the Topic name" }]}>
               <Input placeholder='Name' />
             </Form.Item>
-            <Form.Item name='partitions' label='Partitions' rules={[{ required: true, message: "Please enter the partitions , min:1 and max:10" }]}>
+            <Form.Item
+              name='partitions'
+              label='Partitions'
+              rules={[{ required: true, message: "Please enter the partitions , min:1 and max:10" }]}>
               <InputNumber style={{ width: "100%", border: "none" }} placeholder='Partitions' min={1} max={10} />
             </Form.Item>
-            <Form.Item name='replicas' label='Replicas' rules={[{ required: true, message: "Please enter the replicas , min:1 and max:10" }]}>
+            <Form.Item
+              name='replicas'
+              label='Replicas'
+              rules={[{ required: true, message: "Please enter the replicas , min:1 and max:10" }]}>
               <InputNumber style={{ width: "100%", border: "none" }} placeholder='No of replicas' min={1} max={10} />
             </Form.Item>
             <Form.Item style={{ marginBottom: 0 }}>

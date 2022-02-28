@@ -1,7 +1,7 @@
 import { Skeleton, Table, Tag } from "antd";
 import Column from "antd/lib/table/Column";
 import React, { FC, useState, useEffect } from "react";
-import { ClusterStatus } from "../../../services/Workspace";
+import Workspace, { ClusterStatus, ConsumerGroupInfo, ConsumerMember } from "../../../services/Workspace";
 import workspace, { KafkaClusterBrokers } from "../../../services/Workspace";
 import "./ConsumerGroups.scss";
 
@@ -51,30 +51,14 @@ export const ConsumerState: FC<{ state: ConsumerState }> = ({ state }) => {
   return view;
 };
 
-const ConsumerInfoTable: FC<{ consumerId: string }> = ({ consumerId }) => {
+const ConsumerInfoTable: FC<{ members: ConsumerMember[] }> = ({ members }) => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [consumerInfo, setConsumerInfo] = useState<ConsumerInfoTable[]>([
-    {
-      id: "23",
-      partition: 2,
-      assignedMemeber: "sdgsd33",
-      host: "sdfsdfsd-sdf-sdfsd",
-      logEndOffset: 842255,
-      groupOffset: 52555,
-      lag: 3,
-    },
-  ]);
 
-  useEffect(() => {
-    //   workspace.getKafkaConsumerGroup(clusterId, (r) => {
-    //     setAllConsumerGroup(r);
-    //   });
-  }, []);
   return (
     <Skeleton loading={loading} active paragraph={{ rows: 4 }}>
       <Table
-        dataSource={consumerInfo}
-        rowKey={(c: ConsumerInfoTable) => c.id}
+        dataSource={members}
+        rowKey={(c: ConsumerMember) => c.partition}
         pagination={false}
         locale={{
           emptyText: "Consumer Info not found!",
@@ -82,12 +66,19 @@ const ConsumerInfoTable: FC<{ consumerId: string }> = ({ consumerId }) => {
         className='consumer-info-table tbl-applications'
         style={{ backgroundColor: "#fff" }}>
         <Column width='10%' title='PARTITION' dataIndex='partition' key='id' className='table-cell-light' />
-        <Column width='20%' title='ASSIGNED MEMEBER' dataIndex='assignedMemeber' key='id' className='table-cell-light' />
+        <Column width='20%' title='ASSIGNED MEMEBER' dataIndex='assignedMember' key='id' className='table-cell-light' />
         <Column width='40%' title='HOST' dataIndex='host' key='id' className='table-cell-light' />
 
-        <Column width='10%' title='LOG END OFFSET' dataIndex='logEndOffset' key='id' className='table-cell-light' />
-        <Column width='10%' title='GROUP OFFSET' dataIndex='groupOffset' key='id' className='table-cell-light' />
-        <Column width='10%' title='LAG' dataIndex='lag' key='id' className='table-cell-light' />
+        <Column width='10%' title='LOG END OFFSET' dataIndex='topicPartitionOffset' key='id' className='table-cell-light' />
+        <Column width='10%' title='GROUP OFFSET' dataIndex='consumedOffset' key='id' className='table-cell-light' />
+        <Column
+          width='10%'
+          title='LAG'
+          dataIndex=''
+          render={(r: ConsumerMember) => <>{r.topicPartitionOffset - r.consumedOffset}</>}
+          key='id'
+          className='table-cell-light'
+        />
       </Table>
     </Skeleton>
   );
@@ -100,21 +91,13 @@ const ConsumerGroups: FC<{
   status?: ClusterStatus;
 }> = ({ orgSlugId, workspaceId, clusterId, status }) => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [allConsumerGroups, setAllConsumerGroup] = useState<ConsumerGroups[]>([
-    {
-      id: "sdfsdf1sdfs",
-      state: "Stable",
-      coodinator: 3,
-      member: 4,
-      lag: "0",
-    },
-  ]);
+  const [allConsumerGroups, setAllConsumerGroup] = useState<ConsumerGroupInfo[]>([]);
 
   useEffect(() => {
     if (status && status === "running") {
-      //   workspace.getKafkaConsumerGroup(clusterId, (r) => {
-      //     setAllConsumerGroup(r);
-      //   });
+      Workspace.getKafkaConsumerGroups(clusterId, (r) => {
+        setAllConsumerGroup(r);
+      });
     }
   }, [status]);
 
@@ -122,23 +105,47 @@ const ConsumerGroups: FC<{
     <Skeleton loading={loading} active paragraph={{ rows: 4 }}>
       <Table
         dataSource={status && status === "running" ? allConsumerGroups : [...allConsumerGroups]}
-        rowKey={(c: ConsumerGroups) => c.id}
+        rowKey={(c: ConsumerGroupInfo) => c.id}
         expandable={{
-          expandedRowRender: (record) => <ConsumerInfoTable consumerId={record.id} />,
+          expandedRowRender: (record) => <ConsumerInfoTable members={record.members} />,
           expandIconColumnIndex: 4,
         }}
         pagination={{ size: "small", total: allConsumerGroups.length }}
         locale={{
-          emptyText: `${status && status !== "running" ? "Cluster is not running. Start the cluster to view the Consumer Groups" : "Consumer Groups not found!"}`,
+          emptyText: `${
+            status && status !== "running"
+              ? "Cluster is not running. Start the cluster to view the Consumer Groups"
+              : "Consumer Groups not found!"
+          }`,
         }}
         className='jobs-container tbl-applications consumer-groups-table'
         style={{ minHeight: "50vh", backgroundColor: "#fff" }}>
-        <Column width='10%' title='STATE' dataIndex='' key='id' render={(row) => <ConsumerState state={row.state} />} className='table-cell-light' />
+        <Column
+          width='10%'
+          title='STATE'
+          dataIndex=''
+          key='id'
+          render={(row) => <ConsumerState state={row.state} />}
+          className='table-cell-light'
+        />
         <Column width='50%' title='ID' dataIndex='id' key='id' className='table-cell-light' />
-        <Column title='COODINATOR' dataIndex='' render={(row) => <span className='coodinator-value-box'>{row.coodinator}</span>} key='id' className='table-cell-light' />
+        <Column
+          title='COODINATOR'
+          dataIndex=''
+          render={(row) => <span className='coodinator-value-box'>{row.coordinator}</span>}
+          key='id'
+          className='table-cell-light'
+        />
 
         <Column width='15%' title='LAG(SUM)' dataIndex='lag' key='id' className='table-cell-light' />
-        <Column width='15%' title='MEMBER' dataIndex='member' key='id' className='table-cell-light' />
+        <Column
+          width='15%'
+          title='MEMBERS'
+          render={(row: ConsumerGroupInfo) => <span className='coodinator-value-box'>{row.members.length}</span>}
+          dataIndex=''
+          key='id'
+          className='table-cell-light'
+        />
       </Table>
     </Skeleton>
   );

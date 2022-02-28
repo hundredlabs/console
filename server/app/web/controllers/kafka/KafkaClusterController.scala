@@ -172,7 +172,9 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
       if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
         withKafkaCluster(clusterService, clusterId, profile.workspaceId) { admin =>
           val futureConsumerGroups = getConsumerGroups(admin)
-          futureConsumerGroups.map(cg => Ok(Json.toJson(cg)))
+          val result = futureConsumerGroups.map(cg => Ok(Json.toJson(cg)))
+          result.onComplete(_ => admin.close())
+          result
         }.recoverWith {
             case e: Exception =>
               e.printStackTrace()
