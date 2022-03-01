@@ -20,7 +20,7 @@ import web.services.{ClusterService, MemberService}
 import play.api.cache.SyncCacheApi
 import play.api.i18n.I18nSupport
 import play.api.libs.json.{JsError, Json, Reads}
-import play.api.libs.ws.{EmptyBody, WSClient}
+import play.api.libs.ws.{DefaultBodyWritables, EmptyBody, WSClient}
 import play.api.mvc.MultipartFormData.FilePart
 import play.api.mvc.{Action, AnyContent, AnyContentAsEmpty, InjectedController, Request, WebSocket}
 import play.cache.NamedCache
@@ -152,18 +152,15 @@ class HDFSController @Inject()(@Named("spark-cluster-manager") clusterManager: A
               case Some(f) =>
                 val filename    = Paths.get(f.filename).getFileName
                 val tmpFilePath = s"${rootpath}/${filename}"
+                val tmpFile = new File(tmpFilePath)
                 f.ref.copyTo(Paths.get(tmpFilePath), replace = true)
-                val io = FileIO.fromPath(Paths.get(tmpFilePath))
-                val fp = FilePart("uploadTransfer", f.filename,
-                  f.contentType, io)
-                val s = Source.single(fp)
                 ws.url(url).withFollowRedirects(false).put(EmptyBody).flatMap{ response =>
                   val headerLoc = response.header("Location").getOrElse("None")
-                  ws.url(headerLoc).put(s).map { putResponse =>
-
+                  val result = ws.url(headerLoc).put(tmpFile).map { _ =>
                     Created(Json.toJson(Map("path" -> headerLoc)))
                   }
-
+                  result.onComplete(_ => tmpFile.delete())
+                  result
                 }
             }
 

@@ -112,10 +112,8 @@ const UploadFileModel: FC<{
       visible={action.isUploadModel}
       onCancel={onCloseUploadModel}>
       <div className='upload-file-input'>
-        {action.root && (
-          <Input placeholder='/dirName or /dirName/dirName....' value={action.path} onChange={(e) => onUploadTar(e.target.value)} />
-        )}
-        {!action.path && <Alert message='To Upload a File write any /dirName or put / ' showIcon type='info' />}
+        {action.root && <Input placeholder='/dir or /path/to/dir' value={action.path} onChange={(e) => onUploadTar(e.target.value)} />}
+        {!action.path && <Alert message='To upload a file, put / ' showIcon type='info' />}
         <Dragger
           onChange={onUploadInfo}
           directory={false}
@@ -581,12 +579,12 @@ const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: Clu
   if (status === "running" && !options.length) {
     return (
       <div className='empty-file-contaier'>
-        <Empty description='There are no directory , Create a New Directory or Upload File'>
+        <Empty description='No directories have been created'>
           <Button type='primary' className='create-dir-btn' onClick={() => onCreateModal("/")}>
-            Create Dir
+            Create directory
           </Button>
           <Button type='primary' className='upload-file-btn' onClick={() => onUploadModel("/", true)}>
-            Upload File
+            Upload file
           </Button>
         </Empty>
         <UploadFileModel
