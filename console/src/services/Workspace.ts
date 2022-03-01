@@ -748,7 +748,7 @@ class WorkspaceService extends IErrorHandler {
     try {
       const response = this.webAPI.post<TopicMessage[] | IllegalParam | UnAuthorized | InternalServerError>(
         `/web/v1/kafka/${cId}/topics/${topic}/messages`,
-        { maxResults: 20, startingFrom: "latest" }
+        { maxResults: 50, startingFrom: "beginning" }
       );
 
       const r = await response;
