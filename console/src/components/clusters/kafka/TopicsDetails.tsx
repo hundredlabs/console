@@ -78,6 +78,7 @@ const TopicMessages: FC<{ clusterId: number; topic: string; deselectTopic: () =>
           <Breadcrumb.Item>
             <span style={{ color: "#3b4a73" }}>Messages</span>
           </Breadcrumb.Item>
+          <div>hello</div>
         </Breadcrumb>
         <Divider style={{ margin: "0" }} />
       </Col>

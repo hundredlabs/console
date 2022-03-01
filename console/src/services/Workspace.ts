@@ -746,8 +746,9 @@ class WorkspaceService extends IErrorHandler {
 
   getKafkaTopicMessages = async (cId: number, topic: string, onSuccess: (topic: TopicMessage[]) => void) => {
     try {
-      const response = this.webAPI.get<TopicMessage[] | IllegalParam | UnAuthorized | InternalServerError>(
-        `/web/v1/kafka/${cId}/topics/${topic}/messages`
+      const response = this.webAPI.post<TopicMessage[] | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/kafka/${cId}/topics/${topic}/messages`,
+        { maxResults: 20, startingFrom: "latest" }
       );
 
       const r = await response;

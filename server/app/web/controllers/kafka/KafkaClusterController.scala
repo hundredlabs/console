@@ -6,15 +6,7 @@ import com.mohiva.play.silhouette.api.Silhouette
 import controllers.AssetsFinder
 import javax.inject.{Inject, Named}
 import web.models.{ErrorResponse, InternalServerErrorResponse}
-import web.models.cluster.{
-  ConsumerGroupInfo,
-  ConsumerMember,
-  KafkaClusterJsonFormatter,
-  KafkaConfigurationRequest,
-  KafkaNode,
-  KafkaProcesses,
-  TopicConfig
-}
+import web.models.cluster.{FilterTopicMessage, KafkaClusterJsonFormatter, KafkaConfigurationRequest, KafkaNode, KafkaProcesses, TopicConfig}
 import web.services.{ClusterService, MemberService}
 import play.api.cache.SyncCacheApi
 
@@ -31,11 +23,9 @@ import concurrent.duration._
 import akka.stream.scaladsl.Source
 import com.gigahex.commons.models.RunStatus
 import web.models
-import org.apache.kafka.clients.admin.{NewTopic, OffsetSpec}
-import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.clients.admin.NewTopic
 import web.controllers.handlers.SecuredWebRequestHandler
 
-import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
 class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterManager: ActorRef,
@@ -217,7 +207,7 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
     }
   }
 
-  def listTopicMessages(clusterId: Long, topic: String) = silhouette.UserAwareAction.async { implicit request =>
+  def listTopicMessages(clusterId: Long, topic: String) = silhouette.UserAwareAction.async(validateJson[FilterTopicMessage]) { implicit request =>
     handleMemberRequest(request, memberService) { (roles, profile) =>
       if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
         clusterService
@@ -230,7 +220,7 @@ class KafkaClusterController @Inject()(@Named("spark-cluster-manager") clusterMa
 
                   case Some(p) if p.status == RunStatus.Running =>
                     withAdmin(p.host, p.port) { admin =>
-                      val result = getTopicMessages(admin, topic).map(messages => Ok(Json.toJson(messages)))
+                      val result = getTopicMessages(admin, topic, request.body.maxResults, request.body.startingFrom).map(messages => Ok(Json.toJson(messages)))
                       result.onComplete(_ => admin.close())
                       result
                     }

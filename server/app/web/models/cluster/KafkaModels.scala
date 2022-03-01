@@ -37,13 +37,18 @@ object KafkaProcesses {
   val ZOOKEEPER    = "Zookeeper"
 }
 
+object OffsetPostion {
+  val LATEST = "latest"
+  val BEGINNING = "beginning"
+}
+
 case class TopicDetails(name: String, partitions: Seq[Int], replications: Seq[Int], messages: Long, size: Long)
 case class TopicMessage(key: String, message: String, offset: Long, timestamp: Long, partition: Int)
 case class TopicConfiguration(config: String, value: String, `type`: String, source: String)
 case class PartitionDetails(id: Int, startingOffset: Long, endingOffset: Long, messages: Long, replicas: Seq[Int])
 case class ConsumerGroupInfo(id: String, coordinator: Int, lag: Long, state: String, members: Seq[ConsumerMember])
 case class ConsumerMember(assignedMember: String, partition: Int, topicPartitionOffset: Long, consumedOffset: Long)
-
+case class FilterTopicMessage(maxResults: Int, startingFrom: String)
 case class ReplicaDetails(broker: Int, leader: Boolean, in_sync: Boolean)
 
 trait KafkaClusterJsonFormatter {
@@ -62,5 +67,6 @@ trait KafkaClusterJsonFormatter {
   implicit val jsonTopicConfiguration = Json.format[TopicConfiguration]
   implicit val jsonConsumerFmt        = Json.format[ConsumerMember]
   implicit val jsonConsumerGroupInfo  = Json.format[ConsumerGroupInfo]
+  implicit val jsonFetchTopicMessageFmt = Json.format[FilterTopicMessage]
 
 }
