@@ -6,6 +6,10 @@ Kafka and Apache Hadoop clusters. Currently, it supports running a single node c
 local development and testing.
 
 [![CodeQL](https://github.com/GigahexHQ/gigahex/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/GigahexHQ/gigahex/actions/workflows/codeql-analysis.yml)
+[![Scala build](https://github.com/GigahexHQ/gigahex/actions/workflows/scala.yml/badge.svg)](https://github.com/GigahexHQ/gigahex/actions/workflows/scala.yml)
+[![Github All Releases](https://img.shields.io/github/downloads/GigahexHQ/gigahex/total.svg)]()
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/gigahexhq/gigahex)
+[![Twitter Follow](https://img.shields.io/twitter/follow/GigahexHQ?style=social)](https://twitter.com/GigahexHQ)
 
 [![Gigahex Data Infrastructure Platform](assets/build-spark.png)](https://gigahex.com)
 
