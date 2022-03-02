@@ -6,7 +6,7 @@ import java.util.Properties
 import java.util.concurrent.CompletableFuture
 
 import com.gigahex.commons.models.RunStatus
-import web.models.cluster.{ConsumerGroupInfo, ConsumerMember, KafkaNode, KafkaProcesses, PartitionDetails, TopicConfiguration, TopicDetails, TopicMessage}
+import web.models.cluster.{ConsumerGroupInfo, ConsumerMember, KafkaNode, KafkaProcesses, OffsetPostion, PartitionDetails, TopicConfiguration, TopicDetails, TopicMessage}
 
 import scala.jdk.FutureConverters._
 import org.apache.kafka.clients.admin.{Admin, AdminClientConfig, OffsetSpec, ReplicaInfo}
@@ -22,6 +22,7 @@ import web.models.InternalServerErrorResponse
 import web.services.ClusterService
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -158,7 +159,7 @@ trait KafkaClientHandler {
       }
   }
 
-  def getTopicMessages(admin: Admin, topic: String)(implicit ec: ExecutionContext): Future[Seq[TopicMessage]] = {
+  def getTopicMessages(admin: Admin, topic: String, maxResults: Int, startingFrom: String)(implicit ec: ExecutionContext): Future[Seq[TopicMessage]] = {
     getTopicPartitions(admin, topic)
       .flatMap { partitions =>
         getBootstrapServers(admin)
@@ -166,14 +167,34 @@ trait KafkaClientHandler {
             withConsumer(bootstrapServers) { consumer =>
               val topicPartitions = partitions.map(pd => new TopicPartition(topic, pd.id)).asJava
               consumer.assign(topicPartitions)
-              consumer.seekToBeginning(topicPartitions)
+              if(startingFrom.equals(OffsetPostion.BEGINNING)) {
+                consumer.seekToBeginning(topicPartitions)
+              } else {
+                val ending    = consumer.endOffsets(topicPartitions)
+                ending.forEach((tp, offset) => {
+                  if(offset > maxResults) {
+                    consumer.seek(tp, offset - maxResults)
+                  } else {
+                    consumer.seek(tp, offset)
+                  }
+
+                })
+              }
+
               val records = consumer.poll(Duration.ofMillis(500))
+              val msgs = ArrayBuffer.empty[TopicMessage]
               consumer.close()
               if (records.count() > 0) {
-                records.iterator().asScala.toSeq.map { r =>
-                  TopicMessage(r.key(), r.value(), r.offset(), r.timestamp(), r.partition())
+
+                val iter = records.iterator()
+                var counter = 0
+                while(iter.hasNext && counter < maxResults){
+                  val r = iter.next()
+                  msgs.addOne(TopicMessage(r.key(), r.value(), r.offset(), r.timestamp(), r.partition()))
+                  counter = counter + 1
                 }
-              } else Seq.empty[TopicMessage]
+              }
+              msgs.toSeq.sortBy(_.timestamp * -1)
 
             }
           }
