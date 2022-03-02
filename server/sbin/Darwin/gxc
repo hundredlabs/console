@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 GHX_HOME=${HOME}/gigahex
-VERSION=0.3.0
+VERSION=0.3.1
 PID_FILE=${GHX_HOME}/gigahex-server-$VERSION/RUNNING_PID
 OS="`uname`"
 green="\033[32m"

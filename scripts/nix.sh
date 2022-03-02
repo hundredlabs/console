@@ -17,7 +17,7 @@ reset="\033[0m"
 bs="\033[1m"
 be="\033[0m"
 
-RELEASE_VER="0.3.0"
+RELEASE_VER="0.3.1"
 INSTALL_DIR=${HOME}/gigahex
 PACKAGE_NAME=gigahex-server
 BIN_PATH=${INSTALL_DIR}/bin/gxc

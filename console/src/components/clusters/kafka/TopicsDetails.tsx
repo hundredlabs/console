@@ -54,7 +54,12 @@ const RowExpandable: FC<{ record: any }> = () => {
   );
 };
 
-const TopicMessages: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({ clusterId, topic, deselectTopic, status }) => {
+const TopicMessages: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({
+  clusterId,
+  topic,
+  deselectTopic,
+  status,
+}) => {
   const [topicMessages, setTopicMessages] = useState<TopicMessage[]>([]);
   const [refresh, setRefresh] = useState<boolean>(false);
   const [query, setQuery] = useState<{ maxResult: number; startingFrom: string }>({
@@ -128,13 +133,21 @@ const TopicMessages: FC<{ clusterId: number; topic: string; deselectTopic: () =>
           rowKey={(c: TopicMessage) => `${c.offset}-${c.partition}`}
           pagination={{ size: "small", total: topicMessages.length }}
           locale={{
-            emptyText: `${status && status !== "running" ? "Cluster is not running. Start the cluster to view the messages" : "No messages found."}`,
+            emptyText: `${
+              status && status !== "running" ? "Cluster is not running. Start the cluster to view the messages" : "No messages found."
+            }`,
           }}
           className='jobs-container tbl-applications'>
           <Column title='OFFSET' dataIndex='offset' key='timestamp' className='table-cell-light' />
 
           <Column title='PARTITION' dataIndex='partition' key='timestamp' className='table-cell-light' />
-          <Column title='TIMESTAMP' dataIndex='' key='timestamp' className='table-cell-light' render={(r: TopicMessage) => <span>{moment(r.timestamp).format("DD-MM-YYYY HH:mm:ss.SSS")}</span>} />
+          <Column
+            title='TIMESTAMP'
+            dataIndex=''
+            key='timestamp'
+            className='table-cell-light'
+            render={(r: TopicMessage) => <span>{moment(r.timestamp).format("DD-MM-YYYY HH:mm:ss.SSS")}</span>}
+          />
           <Column title='KEY' dataIndex='key' key='timestamp' className='table-cell-light' />
           <Column title='VALUE' dataIndex='message' key='timestamp' className='table-cell-light' />
         </Table>
@@ -142,7 +155,12 @@ const TopicMessages: FC<{ clusterId: number; topic: string; deselectTopic: () =>
     </Row>
   );
 };
-const TopicConfigList: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({ clusterId, topic, deselectTopic, status }) => {
+const TopicConfigList: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({
+  clusterId,
+  topic,
+  deselectTopic,
+  status,
+}) => {
   const [topicConfigs, setTopicConfigs] = useState<TopicConfigDetail[]>([]);
   useEffect(() => {
     Workspace.getKafkaTopicConfigs(clusterId, topic, (r) => {
@@ -161,7 +179,7 @@ const TopicConfigList: FC<{ clusterId: number; topic: string; deselectTopic: () 
             <span style={{ color: "#3b4a73" }}>{topic}</span>
           </Breadcrumb.Item>
           <Breadcrumb.Item>
-            <span style={{ color: "#3b4a73" }}>Partitions</span>
+            <span style={{ color: "#3b4a73" }}>Configurations</span>
           </Breadcrumb.Item>
         </Breadcrumb>
         <Divider style={{ margin: "0" }} />
@@ -173,7 +191,11 @@ const TopicConfigList: FC<{ clusterId: number; topic: string; deselectTopic: () 
           pagination={{ size: "small", total: topicConfigs.length }}
           id='topic-tbl'
           locale={{
-            emptyText: `${status && status !== "running" ? "Cluster is not running. Start the cluster to view the topic configurations" : "No configurations found."}`,
+            emptyText: `${
+              status && status !== "running"
+                ? "Cluster is not running. Start the cluster to view the topic configurations"
+                : "No configurations found."
+            }`,
           }}
           className='jobs-container tbl-applications partition-list-table'
           style={{ minHeight: "50vh", backgroundColor: "#fff" }}>
@@ -187,7 +209,12 @@ const TopicConfigList: FC<{ clusterId: number; topic: string; deselectTopic: () 
   );
 };
 
-const TopicPartitions: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({ clusterId, topic, deselectTopic, status }) => {
+const TopicPartitions: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({
+  clusterId,
+  topic,
+  deselectTopic,
+  status,
+}) => {
   const [topicPartitions, setTopicPartitions] = useState<PartitionDetails[]>([]);
   useEffect(() => {
     Workspace.getKafkaTopicPartitions(clusterId, topic, (r) => {
@@ -218,7 +245,9 @@ const TopicPartitions: FC<{ clusterId: number; topic: string; deselectTopic: () 
           pagination={{ size: "small", total: topicPartitions.length }}
           id='topic-tbl'
           locale={{
-            emptyText: `${status && status !== "running" ? "Cluster is not running. Start the cluster to view the topics" : "No partitions found."}`,
+            emptyText: `${
+              status && status !== "running" ? "Cluster is not running. Start the cluster to view the topics" : "No partitions found."
+            }`,
           }}
           className='jobs-container tbl-applications partition-list-table'
           style={{ minHeight: "50vh", backgroundColor: "#fff" }}>
@@ -298,7 +327,12 @@ const TopicsDetails: FC<{
   return (
     <div className='topics-details-tabs'>
       <div className='topic-menu'>
-        <Menu defaultSelectedKeys={["message"]} defaultOpenKeys={["message"]} mode='inline' onSelect={({ key }) => setTabView(key as TabView)} theme='light'>
+        <Menu
+          defaultSelectedKeys={["message"]}
+          defaultOpenKeys={["message"]}
+          mode='inline'
+          onSelect={({ key }) => setTabView(key as TabView)}
+          theme='light'>
           <Menu.Item key='message' icon={<MdEmail style={{ fontSize: 18 }} />}>
             Messages
           </Menu.Item>
