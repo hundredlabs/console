@@ -5,6 +5,8 @@ Gigahex is a web based data infrastructure platform to deploy and manage Apache 
 Kafka and Apache Hadoop clusters. Currently, it supports running a single node cluster for 
 local development and testing.
 
+[![CodeQL](https://github.com/GigahexHQ/gigahex/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/GigahexHQ/gigahex/actions/workflows/codeql-analysis.yml)
+
 [![Gigahex Data Infrastructure Platform](assets/build-spark.png)](https://gigahex.com)
 
 ## Main Features
