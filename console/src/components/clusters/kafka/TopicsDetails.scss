@@ -51,6 +51,12 @@
       background: none;
     }
   }
+
+  .msg-filter-mode {
+    .ant-radio-button-wrapper {
+      font-size: 12px;
+    }
+  }
   .key-value-stat {
     .kay-label {
       color: $lt-font-color;
