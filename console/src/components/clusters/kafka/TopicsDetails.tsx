@@ -1,4 +1,4 @@
-import { Tabs, Row, Col, Breadcrumb, Divider, Select, Space, Table, Menu } from "antd";
+import { Tabs, Row, Col, Breadcrumb, Divider, Select, Space, Table, Menu, Radio } from "antd";
 import React, { FC, useEffect, useState } from "react";
 import { ClusterStatus } from "../../../services/Workspace";
 import "./TopicsDetails.scss";
@@ -7,6 +7,7 @@ import { MdCalendarViewMonth, MdEmail, MdSettings } from "react-icons/md";
 import Workspace, { PartitionDetails, TopicConfigDetail, TopicMessage } from "../../../services/Workspace";
 import Column from "antd/lib/table/Column";
 import moment from "moment";
+import { RadioChangeEvent } from "antd/lib/radio";
 const { TabPane } = Tabs;
 const { Option } = Select;
 
@@ -53,33 +54,72 @@ const RowExpandable: FC<{ record: any }> = () => {
   );
 };
 
-const TopicMessages: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({
-  clusterId,
-  topic,
-  deselectTopic,
-  status,
-}) => {
+const TopicMessages: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({ clusterId, topic, deselectTopic, status }) => {
   const [topicMessages, setTopicMessages] = useState<TopicMessage[]>([]);
+  const [refresh, setRefresh] = useState<boolean>(false);
+  const [query, setQuery] = useState<{ maxResult: number; startingFrom: string }>({
+    maxResult: 50,
+    startingFrom: "beginning",
+  });
+
   useEffect(() => {
-    Workspace.getKafkaTopicMessages(clusterId, topic, (r) => {
+    Workspace.getKafkaTopicMessages(clusterId, topic, query.maxResult, query.startingFrom, (r) => {
       setTopicMessages(r);
     });
-  }, []);
+  }, [refresh]);
+
+  const onSelectMaxResult = (value: number) => {
+    setQuery({ ...query, maxResult: value });
+    setRefresh(!refresh);
+  };
+  const onChangeMode = (e: RadioChangeEvent) => {
+    setQuery({ ...query, startingFrom: e.target.value });
+    setRefresh(!refresh);
+  };
   return (
     <Row>
       <Col span={24}>
-        <Breadcrumb separator='>' className='topic-breadcrumb'>
-          <Breadcrumb.Item onClick={() => deselectTopic()}>
-            <span style={{ color: "#5f72f2", cursor: "pointer" }}>Topics</span>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <span style={{ color: "#3b4a73" }}>{topic}</span>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <span style={{ color: "#3b4a73" }}>Messages</span>
-          </Breadcrumb.Item>
-          <div>hello</div>
-        </Breadcrumb>
+        <Row justify='space-between' align='middle' gutter={[24, 0]}>
+          <Col>
+            <Breadcrumb separator='>' className='topic-breadcrumb'>
+              <Breadcrumb.Item onClick={() => deselectTopic()}>
+                <span style={{ color: "#5f72f2", cursor: "pointer" }}>Topics</span>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <span style={{ color: "#3b4a73" }}>{topic}</span>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item>
+                <span style={{ color: "#3b4a73" }}>Messages</span>
+              </Breadcrumb.Item>
+            </Breadcrumb>
+          </Col>
+          <Col className='msg-filter-mode'>
+            <Space align='center' size='middle' style={{ marginRight: 10 }}>
+              <Space align='center' size={5}>
+                <span className='label'>Showing from</span>
+                <Radio.Group
+                  size='small'
+                  options={[
+                    { label: "Latest", value: "latest" },
+                    { label: "Beginning", value: "beginning" },
+                  ]}
+                  onChange={onChangeMode}
+                  value={query.startingFrom}
+                  optionType='button'
+                  buttonStyle='solid'
+                />
+              </Space>
+              <Space align='center' size={5}>
+                <span className='label'>Max results</span>
+                <Select size='small' defaultValue={50} style={{ width: 80 }} onChange={onSelectMaxResult}>
+                  <Option value={50}>50</Option>
+                  <Option value={100}>100</Option>
+                </Select>
+              </Space>
+            </Space>
+          </Col>
+        </Row>
+
         <Divider style={{ margin: "0" }} />
       </Col>
       <Col span={24} className='topic-message-list'>
@@ -88,21 +128,13 @@ const TopicMessages: FC<{ clusterId: number; topic: string; deselectTopic: () =>
           rowKey={(c: TopicMessage) => `${c.offset}-${c.partition}`}
           pagination={false}
           locale={{
-            emptyText: `${
-              status && status !== "running" ? "Cluster is not running. Start the cluster to view the messages" : "No messages found."
-            }`,
+            emptyText: `${status && status !== "running" ? "Cluster is not running. Start the cluster to view the messages" : "No messages found."}`,
           }}
           className='jobs-container tbl-applications'>
           <Column title='OFFSET' dataIndex='offset' key='timestamp' className='table-cell-light' />
 
           <Column title='PARTITION' dataIndex='partition' key='timestamp' className='table-cell-light' />
-          <Column
-            title='TIMESTAMP'
-            dataIndex=''
-            key='timestamp'
-            className='table-cell-light'
-            render={(r: TopicMessage) => <span>{moment(r.timestamp).format("DD-MM-YYYY HH:mm:ss.SSS")}</span>}
-          />
+          <Column title='TIMESTAMP' dataIndex='' key='timestamp' className='table-cell-light' render={(r: TopicMessage) => <span>{moment(r.timestamp).format("DD-MM-YYYY HH:mm:ss.SSS")}</span>} />
           <Column title='KEY' dataIndex='key' key='timestamp' className='table-cell-light' />
           <Column title='VALUE' dataIndex='message' key='timestamp' className='table-cell-light' />
         </Table>
@@ -110,12 +142,7 @@ const TopicMessages: FC<{ clusterId: number; topic: string; deselectTopic: () =>
     </Row>
   );
 };
-const TopicConfigList: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({
-  clusterId,
-  topic,
-  deselectTopic,
-  status,
-}) => {
+const TopicConfigList: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({ clusterId, topic, deselectTopic, status }) => {
   const [topicConfigs, setTopicConfigs] = useState<TopicConfigDetail[]>([]);
   useEffect(() => {
     Workspace.getKafkaTopicConfigs(clusterId, topic, (r) => {
@@ -146,11 +173,7 @@ const TopicConfigList: FC<{ clusterId: number; topic: string; deselectTopic: () 
           pagination={false}
           id='topic-tbl'
           locale={{
-            emptyText: `${
-              status && status !== "running"
-                ? "Cluster is not running. Start the cluster to view the topic configurations"
-                : "No configurations found."
-            }`,
+            emptyText: `${status && status !== "running" ? "Cluster is not running. Start the cluster to view the topic configurations" : "No configurations found."}`,
           }}
           className='jobs-container tbl-applications partition-list-table'
           style={{ minHeight: "50vh", backgroundColor: "#fff" }}>
@@ -164,12 +187,7 @@ const TopicConfigList: FC<{ clusterId: number; topic: string; deselectTopic: () 
   );
 };
 
-const TopicPartitions: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({
-  clusterId,
-  topic,
-  deselectTopic,
-  status,
-}) => {
+const TopicPartitions: FC<{ clusterId: number; topic: string; deselectTopic: () => void; status?: ClusterStatus }> = ({ clusterId, topic, deselectTopic, status }) => {
   const [topicPartitions, setTopicPartitions] = useState<PartitionDetails[]>([]);
   useEffect(() => {
     Workspace.getKafkaTopicPartitions(clusterId, topic, (r) => {
@@ -200,9 +218,7 @@ const TopicPartitions: FC<{ clusterId: number; topic: string; deselectTopic: () 
           pagination={false}
           id='topic-tbl'
           locale={{
-            emptyText: `${
-              status && status !== "running" ? "Cluster is not running. Start the cluster to view the topics" : "No partitions found."
-            }`,
+            emptyText: `${status && status !== "running" ? "Cluster is not running. Start the cluster to view the topics" : "No partitions found."}`,
           }}
           className='jobs-container tbl-applications partition-list-table'
           style={{ minHeight: "50vh", backgroundColor: "#fff" }}>
@@ -282,12 +298,7 @@ const TopicsDetails: FC<{
   return (
     <div className='topics-details-tabs'>
       <div className='topic-menu'>
-        <Menu
-          defaultSelectedKeys={["message"]}
-          defaultOpenKeys={["message"]}
-          mode='inline'
-          onSelect={({ key }) => setTabView(key as TabView)}
-          theme='light'>
+        <Menu defaultSelectedKeys={["message"]} defaultOpenKeys={["message"]} mode='inline' onSelect={({ key }) => setTabView(key as TabView)} theme='light'>
           <Menu.Item key='message' icon={<MdEmail style={{ fontSize: 18 }} />}>
             Messages
           </Menu.Item>
