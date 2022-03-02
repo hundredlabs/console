@@ -58,4 +58,10 @@
       font-weight: 600;
     }
   }
+
+  .topic-menu-content {
+    .ant-table-pagination.ant-pagination {
+      margin: 16px 15px;
+    }
+  }
 }
