@@ -369,11 +369,11 @@ const HDFSStorageFile: FC<{ activeTab: activeTab; clusterId: number; status: Clu
   };
 
   const onUploadModel = (path: string, root: boolean) => {
-    setAction({ ...action, path: path, isUploadModel: true, root: root });
+    setAction({ ...action, path: path, isUploadModel: true, root: root, isCreateModel: false, isRenameModel: false });
   };
 
   const onCreateModal = (path: string) => {
-    setAction({ ...action, name: "", path: path, isCreateModel: true });
+    setAction({ ...action, name: "", path: path, isCreateModel: true, isRenameModel: false, isUploadModel: false });
   };
 
   const onDirNameChange = (v: string) => {
