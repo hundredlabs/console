@@ -27,20 +27,46 @@ const routes = (
       <Route
         exact
         path='/:slugId/workspace/:workspaceId/new-cluster'
-        render={(props) => <WorkspaceMain index='2' content={<ClusterBuilder orgSlugId={props.match.params.slugId} workspaceId={Number(props.match.params.workspaceId)} />} {...props} />}
+        render={(props) => (
+          <WorkspaceMain
+            index='2'
+            content={<ClusterBuilder orgSlugId={props.match.params.slugId} workspaceId={Number(props.match.params.workspaceId)} />}
+            {...props}
+          />
+        )}
       />
 
       <Route path='/login' render={(props) => <LoginWithEmail search={props.location.search} />} />
 
-      <Route exact path='/oauth/:provider' render={(props) => <Oauth provider={props.match.params.provider} location={props.location.search} />} />
+      <Route
+        exact
+        path='/oauth/:provider'
+        render={(props) => <Oauth provider={props.match.params.provider} location={props.location.search} />}
+      />
       <Route path='/onboard' render={(props) => <CreateOrgWorkspace {...props} />} />
       <Route path='/workspace/dashboard' render={(props) => <WorkspaceMain index='0' slugId='223' content={<WorkspaceDashboard />} />} />
       <Route path='/workspaces' exact render={(props) => <WorkspaceMain index='0' slugId='' content={<WorkspaceOverview slugId='' />} />} />
 
-      <Route path='/:slugId/workspaces' exact render={(props) => <WorkspaceMain index='0' slugId={props.match.params.slugId} content={<WorkspaceList />} {...props} />} />
-      <Route path='/:slugId/workspace/:workspaceId/clusters' exact render={(props) => <WorkspaceMain index='2' slugId={props.match.params.slugId} content={<Clusters />} {...props} />} />
-      <Route path='/:slugId/workspace/:workspaceId/hosts' exact render={(props) => <WorkspaceMain index='10' slugId={props.match.params.slugId} content={<HostsList />} {...props} />} />
-      <Route path='/:slugId/settings' exact render={(props) => <WorkspaceMain index='1' slugId={props.match.params.slugId} content={<OrgSetting />} {...props} />} />
+      <Route
+        path='/:slugId/workspaces'
+        exact
+        render={(props) => <WorkspaceMain index='0' slugId={props.match.params.slugId} content={<WorkspaceList />} {...props} />}
+      />
+      <Route
+        path='/:slugId/workspace/:workspaceId/clusters'
+        exact
+        render={(props) => <WorkspaceMain index='0' slugId={props.match.params.slugId} content={<Clusters />} {...props} />}
+      />
+      <Route
+        path='/:slugId/workspace/:workspaceId/hosts'
+        exact
+        render={(props) => <WorkspaceMain index='10' slugId={props.match.params.slugId} content={<HostsList />} {...props} />}
+      />
+      <Route
+        path='/:slugId/settings'
+        exact
+        render={(props) => <WorkspaceMain index='1' slugId={props.match.params.slugId} content={<OrgSetting />} {...props} />}
+      />
 
       <Route
         path='/:slugId/workspace/:workspaceId/clusters/:clusterId'
@@ -49,7 +75,13 @@ const routes = (
           <WorkspaceMain
             index='2'
             slugId={props.match.params.slugId}
-            content={<ClusterDashboard workspaceId={Number(props.match.params.workspaceId)} orgSlugId={props.match.params.slugId} clusterId={Number(props.match.params.clusterId)} />}
+            content={
+              <ClusterDashboard
+                workspaceId={Number(props.match.params.workspaceId)}
+                orgSlugId={props.match.params.slugId}
+                clusterId={Number(props.match.params.clusterId)}
+              />
+            }
             {...props}
           />
         )}
@@ -61,7 +93,13 @@ const routes = (
           <WorkspaceMain
             index='2'
             slugId={props.match.params.slugId}
-            content={<SparkClusterDashboard workspaceId={Number(props.match.params.workspaceId)} orgSlugId={props.match.params.slugId} clusterId={Number(props.match.params.clusterId)} />}
+            content={
+              <SparkClusterDashboard
+                workspaceId={Number(props.match.params.workspaceId)}
+                orgSlugId={props.match.params.slugId}
+                clusterId={Number(props.match.params.clusterId)}
+              />
+            }
             {...props}
           />
         )}
@@ -73,7 +111,13 @@ const routes = (
           <WorkspaceMain
             index='2'
             slugId={props.match.params.slugId}
-            content={<KafkaClusterDashboard workspaceId={Number(props.match.params.workspaceId)} orgSlugId={props.match.params.slugId} clusterId={Number(props.match.params.clusterId)} />}
+            content={
+              <KafkaClusterDashboard
+                workspaceId={Number(props.match.params.workspaceId)}
+                orgSlugId={props.match.params.slugId}
+                clusterId={Number(props.match.params.clusterId)}
+              />
+            }
             {...props}
           />
         )}
@@ -85,7 +129,13 @@ const routes = (
           <WorkspaceMain
             index='2'
             slugId={props.match.params.slugId}
-            content={<HDFSClusterDashboard workspaceId={Number(props.match.params.workspaceId)} orgSlugId={props.match.params.slugId} clusterId={Number(props.match.params.clusterId)} />}
+            content={
+              <HDFSClusterDashboard
+                workspaceId={Number(props.match.params.workspaceId)}
+                orgSlugId={props.match.params.slugId}
+                clusterId={Number(props.match.params.clusterId)}
+              />
+            }
             {...props}
           />
         )}

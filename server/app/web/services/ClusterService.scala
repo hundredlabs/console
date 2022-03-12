@@ -34,6 +34,8 @@ trait ClusterService {
 
   def listLocalHostByWorkspace(workspaceId: Long): Future[Seq[ServerHost]]
 
+  def listSandboxes(workspaceId: Long): Future[Seq[ServerHost]]
+
   def listClusterPackages(): Future[Seq[ClusterPackage]]
 
   def getOrgId(workspaceId: Long): Future[Option[Long]]
@@ -121,6 +123,8 @@ class ClusterServiceImpl @Inject()(clusterRepo: ClusterRepo,
 
   override def listLocalHostByWorkspace(workspaceId: Long): Future[Seq[ServerHost]] =
     clusterRepo.listLocalHostByWorkspace(workspaceId)
+
+  override def listSandboxes(workspaceId: Long): Future[Seq[ServerHost]] = clusterRepo.listLocalHostByWorkspace(workspaceId)
 
   override def getClusterPackageInfo(clusterId: Long, name: String): Future[Option[ClusterPackage]] = name match {
     case ServicesNames.SPARK  => sparkClusterRepo.getClusterPackages(Seq(clusterId)).map(_.headOption)

@@ -1,6 +1,6 @@
 import React from "react";
 export const ConsoleLogo: React.FC<{}> = () => (
-  <i className='anticon'>
+  <i className='anticon' style={{ fontSize: "1.5rem", marginBottom: "10px" }}>
     <svg xmlns='http://www.w3.org/2000/svg' width='1em' height='1em' viewBox='142.734 79.837 237.564 230.602'>
       <g transform='matrix(1 0 0 .9825 -652.725 -38.984)'>
         <path fill='#33296C' d='M1.461 1.359L48 0l15 28H15.5L1.461 1.359z' data-name='Path 1' transform='translate(955 161)'></path>
