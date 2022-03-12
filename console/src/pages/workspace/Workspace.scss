@@ -114,7 +114,7 @@
     color: #1c245d;
     cursor: pointer;
     padding: 0 20px;
-    background-color: $lt-card-bg;
+    background-color: $lt-table-header-cell;
     align-items: center;
     transition: all 0.5s;
 
@@ -139,7 +139,7 @@
     .brand-name {
       margin-left: 5px;
       margin-right: 5px;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: bold;
     }
 
@@ -206,13 +206,56 @@
 }
 .workspace-side-nav {
   border-right: 1px solid #eee;
-  .wks-name-ctr {
-    margin: 15px;
+  & > div {
     display: flex;
-    padding: 8px;
-    height: 48px;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .ant-menu {
+    font-size: 12px;
+  }
+  .ant-menu-sub.ant-menu-inline > .ant-menu-item {
+    height: 30px;
+    line-height: 30px;
+  }
+  .side-nav-icon {
+    font-size: 0.9rem;
+    margin: 0px 8px 0px 0px;
+  }
+  :not(li.ant-menu-item-active) {
+    i {
+      color: $lt-card-border;
+    }
+  }
+  li.ant-menu-item-active {
+    i {
+      color: $lt-btn-primary;
+    }
+  }
+  li.ant-menu-submenu-active {
+    i {
+      color: $lt-btn-primary;
+    }
+  }
+  li.ant-menu-submenu-selected {
+    i {
+      color: $lt-btn-primary;
+    }
+  }
+  li.ant-menu-item-selected {
+    i {
+      color: $lt-btn-primary;
+    }
+  }
+  div.ant-menu-submenu-title {
+    display: flex;
+  }
+  .wks-name-ctr {
+    margin: 18px;
+    display: flex;
+    padding: 5px;
     text-align: center;
-
+    cursor: pointer;
     justify-content: center;
     align-items: center;
 
@@ -241,13 +284,13 @@
     }
 
     .wks-name-light {
-      background-color: $lt-font-color;
       color: $lt-bg;
     }
   }
   .wks-name-ctr-light {
-    background-color: $lt-font-color;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0), 0 1px 2px rgba(0, 0, 0, 0.16);
+    background-color: $lt-main-bg;
+
+    border-radius: 4px;
   }
 }
 .drawer-light {

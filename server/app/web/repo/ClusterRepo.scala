@@ -174,7 +174,7 @@ class ClusterRepoImpl(blockingEC: ExecutionContext) extends ClusterRepo {
     blocking {
       DB readOnly { implicit session =>
         val hosts =
-          sql"""SELECT sh.id, sh.name, sh.host_ip, sh.status, c.service_version, c.service_name, sh.dt_added, c.provider FROM server_hosts sh
+          sql"""SELECT sh.id, sh.name, sh.cluster_id, sh.host_ip, sh.status, c.service_version, c.service_name, sh.dt_added, c.provider FROM server_hosts sh
                INNER JOIN clusters c ON sh.cluster_id = c.id
               WHERE c.status <> ${ClusterStatus.DELETED.toString}"""
             .map { row =>
@@ -182,7 +182,7 @@ class ClusterRepoImpl(blockingEC: ExecutionContext) extends ClusterRepo {
                 id = row.long("id"),
                 name = row.string("name"),
                 provider = ClusterProvider.withName(row.string("provider")),
-                components = Seq(ServiceComponent(row.string("service_name"), row.string("service_version"))),
+                components = Seq(ServiceComponent(row.long("cluster_id"), row.string("service_name"), row.string("service_version"))),
                 status = ClusterStatus.withName(row.string("status")),
                 dtAddedEpoch = row.dateTime("dt_added").toEpochSecond
               )

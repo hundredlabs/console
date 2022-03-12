@@ -67,7 +67,7 @@ case class NewSandboxCluster(name: String, sandboxId: Int, serviceOptionId: Stri
 case class DBSandboxCluster(id: Long, cluster: SandboxCluster)
 case class VerifyCluster(name: String, provider: ClusterProvider)
 case class LastClusterPing(id: Long, lastPingTS: ZonedDateTime)
-case class ServiceComponent(name: String, version: String)
+case class ServiceComponent(id: Long, name: String, version: String)
 case class ServerHost(id: Long,
                       name: String,
                       provider: ClusterProvider,
