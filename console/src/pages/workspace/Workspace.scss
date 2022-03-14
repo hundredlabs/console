@@ -17,6 +17,14 @@
     align-items: center;
   }
 
+  .add-datasource-btn {
+    background-color: $dark-btn-primary !important;
+    color: #fff;
+    &::after {
+      border-right: 0;
+    }
+  }
+
   .docker-info-footer {
     position: absolute;
     left: 0;
@@ -213,6 +221,7 @@
   }
   .ant-menu {
     font-size: 12px;
+    // padding: 0 10px;
   }
   .ant-menu-sub.ant-menu-inline > .ant-menu-item {
     height: 30px;

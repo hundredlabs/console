@@ -10,6 +10,7 @@ import { updateLogin } from "../../actions/auth";
 import { Dispatch } from "redux";
 import { MdQuestionAnswer, MdDashboard, MdDns, MdBook, MdKeyboardArrowDown } from "react-icons/md";
 import { FaDatabase, FaStream, FaFileInvoice } from "react-icons/fa";
+import { BsPlusLg, BsArrowRight } from "react-icons/bs";
 import { Hexagon } from "../../components/Icons/NavIcons";
 import AuthService, { MemberProfile } from "../../services/AuthService";
 import { history } from "../../configureStore";
@@ -204,6 +205,21 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
         <CustomScroll heightRelativeToParent='calc(100vh - 100px)'>
           <Menu theme='light' mode='inline' defaultSelectedKeys={[]} defaultOpenKeys={["0"]}>
             <Menu.Item
+              key='11'
+              className='center-name add-datasource-btn'
+              onClick={(e) =>
+                history.push(
+                  `/${context.currentUser.profile?.orgSlugId}/workspace/${context.currentUser.profile?.workspaceId}/add-datasource`
+                )
+              }
+              icon={
+                <i style={{ fontSize: 12, marginTop: 4, color: "#fff" }}>
+                  <BsPlusLg />
+                </i>
+              }>
+              {context.currentUser.profile && <span>Add Datasource</span>}
+            </Menu.Item>
+            <Menu.Item
               key='10'
               className='center-name'
               onClick={(e) =>
@@ -277,28 +293,9 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
         </Dropdown>
       </Sider>
       <Layout className='site-layout'>
-        <Header className='header-nav-layout' style={{ padding: 0 }}>
-          <div onClick={toggle} className='trigger'>
-            <MenuFoldOutlined />
-          </div>
-
-          <Space style={{ margin: "0 20px", position: "relative" }}>
-            <Dropdown overlay={HelpMenu} trigger={["click", "hover"]}>
-              <div style={{ margin: "0 10px", position: "relative" }}>
-                <Button type='link'>
-                  Help
-                  <i style={{ fontSize: 20, top: 4, marginLeft: 2, position: "absolute" }}>
-                    <MdKeyboardArrowDown />
-                  </i>
-                </Button>
-              </div>
-            </Dropdown>
-          </Space>
-        </Header>
         <Content
           className='site-layout-background'
           style={{
-            padding: "20px 20px 0px 20px",
             minHeight: 280,
           }}>
           {content}
