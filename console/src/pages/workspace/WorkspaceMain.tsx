@@ -1,27 +1,26 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
-import { MenuFoldOutlined, DownOutlined } from "@ant-design/icons";
-import { Layout, Menu, Dropdown, Button, Space, Tooltip, Tag } from "antd";
+import { DownOutlined } from "@ant-design/icons";
+import { Layout, Menu, Dropdown, Tooltip, Tag } from "antd";
 import { connect } from "react-redux";
 import { appLoaded } from "../../actions/app";
 import { User, UserContext } from "../../store/User";
 import { AppState } from "../../reducers";
 import { updateLogin } from "../../actions/auth";
 import { Dispatch } from "redux";
-import { MdQuestionAnswer, MdDashboard, MdDns, MdBook, MdKeyboardArrowDown } from "react-icons/md";
+import { MdDashboard } from "react-icons/md";
 import { FaDatabase, FaStream, FaFileInvoice } from "react-icons/fa";
-import { BsPlusLg, BsArrowRight } from "react-icons/bs";
+import { BsPlusLg } from "react-icons/bs";
 import { Hexagon } from "../../components/Icons/NavIcons";
 import AuthService, { MemberProfile } from "../../services/AuthService";
 import { history } from "../../configureStore";
 import packageJson from "../../../package.json";
 import CustomScroll from "react-custom-scroll";
-import { getLocalStorage, setLocalStorage } from "../../services/Utils";
+import { getLocalStorage } from "../../services/Utils";
 import WebService from "../../services/WebService";
 import { ConsoleLogo } from "../../components/Icons/ConsoleLogo";
 import "../../style/customScroll.css";
 
-const { Content, Sider, Header } = Layout;
+const { Content, Sider } = Layout;
 const { SubMenu } = Menu;
 
 interface IMainProps {
@@ -91,32 +90,6 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
       display: "none",
     };
   }
-  const toggle = () => {
-    setState({
-      collapsed: !state.collapsed,
-    });
-    setLocalStorage("collaps", !getLocalStorage("collaps"));
-  };
-
-  const createMenu = (
-    <Menu>
-      {/* disabled for free version */}
-      {/* <Menu.Item key='create:1'>
-        {context.currentUser.profile && (
-          <Link to={`/${context.currentUser.profile.orgSlugId}/workspace/${context.currentUser.profile.workspaceId}/deploy-job`}>
-            Add Job
-          </Link>
-        )}
-      </Menu.Item> */}
-      <Menu.Item key='create:3'>
-        {context.currentUser.profile && (
-          <Link to={`/${context.currentUser.profile.orgSlugId}/workspace/${context.currentUser.profile.workspaceId}/new-cluster`}>
-            Add Cluster
-          </Link>
-        )}
-      </Menu.Item>
-    </Menu>
-  );
 
   const orgMenu = (
     <Menu mode='horizontal'>
@@ -126,41 +99,6 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
 
       <Menu.Item key='2' onClick={() => handleLogout()}>
         <span>Logout</span>
-      </Menu.Item>
-    </Menu>
-  );
-
-  const HelpMenu = (
-    <Menu mode='horizontal'>
-      <Menu.Item
-        key='9'
-        style={{ display: "flex" }}
-        icon={
-          <i style={{ fontSize: 16, marginTop: 4, color: "grey", marginRight: 5 }}>
-            <MdBook />
-          </i>
-        }
-        onClick={(e) => {}}>
-        <div>
-          <a href='https://gigahex.com/docs' target='_blank'>
-            <span>Documentation</span>
-          </a>
-        </div>
-      </Menu.Item>
-      <Menu.Item
-        key='10'
-        style={{ display: "flex" }}
-        onClick={(e) => {}}
-        icon={
-          <i style={{ fontSize: 16, marginTop: 4, marginRight: 5 }}>
-            <MdQuestionAnswer />
-          </i>
-        }>
-        <div>
-          <a href='https://github.com/GigahexHQ/gigahex/issues/new/choose' target='_blank'>
-            <span>Community Support</span>
-          </a>
-        </div>
       </Menu.Item>
     </Menu>
   );

@@ -1,10 +1,10 @@
 import React, { FC } from "react";
 import "./AddDatasource.scss";
 import { Drawer, Menu } from "antd";
-import { Link } from "react-router-dom";
+
 import DatasourceCard from "../../../components/Cards/DatasourceCard";
-import { FaAws } from "react-icons/fa";
-import { IconAWS, IconGCP, IconAzure, CircleCheck } from "../../../components/Icons/PlatformIcons";
+
+import { IconAWS } from "../../../components/Icons/PlatformIcons";
 
 const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = () => {
   const [selectedKey, setSelectedKey] = React.useState("file-system");
@@ -15,8 +15,6 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = () => {
   const selectMenu = (e: any) => {
     setSelectedKey(e.key);
   };
-
-  React.useEffect(() => {}, []);
 
   const onCloseDrawer = () => {
     setSrouceDrawer({ ...sourceDrawer, isOpen: false });
@@ -59,34 +57,6 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = () => {
               onClickAdd={openSourceDrawer}
               btnText='ADD BUCKET'
             />
-            <DatasourceCard
-              sourceIcon={<IconGCP className='source-icon' selected={true} />}
-              sourceName='Google Cloud Stream '
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={openSourceDrawer}
-              btnText='ADD HDFS'
-            />
-            <DatasourceCard
-              sourceIcon={<IconAWS className='source-icon' selected={true} />}
-              sourceName='Spaces'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={openSourceDrawer}
-              btnText='ADD BUCKET'
-            />
-            <DatasourceCard
-              sourceIcon={<IconGCP className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={openSourceDrawer}
-              btnText='ADD BUCKET'
-            />
-            <DatasourceCard
-              sourceIcon={<IconGCP className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={openSourceDrawer}
-              btnText='ADD BUCKET'
-            />
           </div>
         </div>
         <div id='databases' className='data-source-section'>
@@ -96,35 +66,7 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = () => {
               sourceIcon={<IconAWS className='source-icon' selected={true} />}
               sourceName='AWS S3'
               sourceDesc='Object storage built to retrives'
-              onClickAdd={() => {}}
-              btnText='ADD BUCKET'
-            />
-            <DatasourceCard
-              sourceIcon={<IconGCP className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={() => {}}
-              btnText='ADD BUCKET'
-            />
-            <DatasourceCard
-              sourceIcon={<IconAWS className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={() => {}}
-              btnText='ADD BUCKET'
-            />
-            <DatasourceCard
-              sourceIcon={<IconGCP className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={() => {}}
-              btnText='ADD BUCKET'
-            />
-            <DatasourceCard
-              sourceIcon={<IconAWS className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={() => {}}
+              onClickAdd={openSourceDrawer}
               btnText='ADD BUCKET'
             />
           </div>
@@ -136,35 +78,7 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = () => {
               sourceIcon={<IconAWS className='source-icon' selected={true} />}
               sourceName='AWS S3'
               sourceDesc='Object storage built to retrives'
-              onClickAdd={() => {}}
-              btnText='ADD BUCKET'
-            />
-            <DatasourceCard
-              sourceIcon={<IconAWS className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={() => {}}
-              btnText='ADD HDFS'
-            />
-            <DatasourceCard
-              sourceIcon={<IconAWS className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={() => {}}
-              btnText='ADD BUCKET'
-            />
-            <DatasourceCard
-              sourceIcon={<IconAWS className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={() => {}}
-              btnText='ADD BUCKET'
-            />
-            <DatasourceCard
-              sourceIcon={<IconAWS className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={() => {}}
+              onClickAdd={openSourceDrawer}
               btnText='ADD BUCKET'
             />
           </div>

@@ -1,15 +1,15 @@
 import { Button, Card, Space } from "antd";
-import React, { FC } from "react";
+import { FC } from "react";
 
-interface DatasourceCard {
-  btnText: String;
+interface CardProps {
+  btnText: string;
   sourceName: string;
   sourceIcon: any;
   sourceDesc: string;
   onClickAdd: (name: string) => void;
 }
 
-const DatasourceCard: FC<DatasourceCard> = ({ btnText, sourceDesc, sourceIcon, sourceName, onClickAdd }) => {
+const DatasourceCard: FC<CardProps> = ({ btnText, sourceDesc, sourceIcon, sourceName, onClickAdd }) => {
   return (
     <Card className='datasource-card'>
       <Space align='center' size='small'>
