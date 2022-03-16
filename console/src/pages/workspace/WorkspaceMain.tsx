@@ -1,26 +1,26 @@
 import * as React from "react";
-import { Link } from "react-router-dom";
-import { MenuFoldOutlined, DownOutlined } from "@ant-design/icons";
-import { Layout, Menu, Dropdown, Button, Space, Tooltip, Tag } from "antd";
+import { DownOutlined } from "@ant-design/icons";
+import { Layout, Menu, Dropdown, Tooltip, Tag } from "antd";
 import { connect } from "react-redux";
 import { appLoaded } from "../../actions/app";
 import { User, UserContext } from "../../store/User";
 import { AppState } from "../../reducers";
 import { updateLogin } from "../../actions/auth";
 import { Dispatch } from "redux";
-import { MdQuestionAnswer, MdDashboard, MdDns, MdBook, MdKeyboardArrowDown } from "react-icons/md";
+import { MdDashboard } from "react-icons/md";
 import { FaDatabase, FaStream, FaFileInvoice } from "react-icons/fa";
+import { BsPlusLg } from "react-icons/bs";
 import { Hexagon } from "../../components/Icons/NavIcons";
 import AuthService, { MemberProfile } from "../../services/AuthService";
 import { history } from "../../configureStore";
 import packageJson from "../../../package.json";
 import CustomScroll from "react-custom-scroll";
-import { getLocalStorage, setLocalStorage } from "../../services/Utils";
+import { getLocalStorage } from "../../services/Utils";
 import WebService from "../../services/WebService";
 import { ConsoleLogo } from "../../components/Icons/ConsoleLogo";
 import "../../style/customScroll.css";
 
-const { Content, Sider, Header } = Layout;
+const { Content, Sider } = Layout;
 const { SubMenu } = Menu;
 
 interface IMainProps {
@@ -90,32 +90,6 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
       display: "none",
     };
   }
-  const toggle = () => {
-    setState({
-      collapsed: !state.collapsed,
-    });
-    setLocalStorage("collaps", !getLocalStorage("collaps"));
-  };
-
-  const createMenu = (
-    <Menu>
-      {/* disabled for free version */}
-      {/* <Menu.Item key='create:1'>
-        {context.currentUser.profile && (
-          <Link to={`/${context.currentUser.profile.orgSlugId}/workspace/${context.currentUser.profile.workspaceId}/deploy-job`}>
-            Add Job
-          </Link>
-        )}
-      </Menu.Item> */}
-      <Menu.Item key='create:3'>
-        {context.currentUser.profile && (
-          <Link to={`/${context.currentUser.profile.orgSlugId}/workspace/${context.currentUser.profile.workspaceId}/new-cluster`}>
-            Add Cluster
-          </Link>
-        )}
-      </Menu.Item>
-    </Menu>
-  );
 
   const orgMenu = (
     <Menu mode='horizontal'>
@@ -125,41 +99,6 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
 
       <Menu.Item key='2' onClick={() => handleLogout()}>
         <span>Logout</span>
-      </Menu.Item>
-    </Menu>
-  );
-
-  const HelpMenu = (
-    <Menu mode='horizontal'>
-      <Menu.Item
-        key='9'
-        style={{ display: "flex" }}
-        icon={
-          <i style={{ fontSize: 16, marginTop: 4, color: "grey", marginRight: 5 }}>
-            <MdBook />
-          </i>
-        }
-        onClick={(e) => {}}>
-        <div>
-          <a href='https://gigahex.com/docs' target='_blank'>
-            <span>Documentation</span>
-          </a>
-        </div>
-      </Menu.Item>
-      <Menu.Item
-        key='10'
-        style={{ display: "flex" }}
-        onClick={(e) => {}}
-        icon={
-          <i style={{ fontSize: 16, marginTop: 4, marginRight: 5 }}>
-            <MdQuestionAnswer />
-          </i>
-        }>
-        <div>
-          <a href='https://github.com/GigahexHQ/gigahex/issues/new/choose' target='_blank'>
-            <span>Community Support</span>
-          </a>
-        </div>
       </Menu.Item>
     </Menu>
   );
@@ -203,6 +142,21 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
         </Dropdown>
         <CustomScroll heightRelativeToParent='calc(100vh - 100px)'>
           <Menu theme='light' mode='inline' defaultSelectedKeys={[]} defaultOpenKeys={["0"]}>
+            <Menu.Item
+              key='11'
+              className='center-name add-datasource-btn'
+              onClick={(e) =>
+                history.push(
+                  `/${context.currentUser.profile?.orgSlugId}/workspace/${context.currentUser.profile?.workspaceId}/add-datasource`
+                )
+              }
+              icon={
+                <i style={{ fontSize: 12, marginTop: 4, color: "#fff" }}>
+                  <BsPlusLg />
+                </i>
+              }>
+              {context.currentUser.profile && <span>Add Datasource</span>}
+            </Menu.Item>
             <Menu.Item
               key='10'
               className='center-name'
@@ -277,28 +231,9 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
         </Dropdown>
       </Sider>
       <Layout className='site-layout'>
-        <Header className='header-nav-layout' style={{ padding: 0 }}>
-          <div onClick={toggle} className='trigger'>
-            <MenuFoldOutlined />
-          </div>
-
-          <Space style={{ margin: "0 20px", position: "relative" }}>
-            <Dropdown overlay={HelpMenu} trigger={["click", "hover"]}>
-              <div style={{ margin: "0 10px", position: "relative" }}>
-                <Button type='link'>
-                  Help
-                  <i style={{ fontSize: 20, top: 4, marginLeft: 2, position: "absolute" }}>
-                    <MdKeyboardArrowDown />
-                  </i>
-                </Button>
-              </div>
-            </Dropdown>
-          </Space>
-        </Header>
         <Content
           className='site-layout-background'
           style={{
-            padding: "20px 20px 0px 20px",
             minHeight: 280,
           }}>
           {content}

@@ -19,6 +19,7 @@ import ClusterBuilder from "../pages/workspace/Clusters/ClusterBuilder";
 import HostsList from "../pages/workspace/HostList/HostList";
 import KafkaClusterDashboard from "../pages/workspace/Clusters/KafkaClusterDashboard";
 import HDFSClusterDashboard from "../pages/workspace/Clusters/HDFSClusterDashboard";
+import AddDatasource from "../pages/workspace/AddDatasource/AddDatasource";
 
 const routes = (
   <div>
@@ -136,6 +137,19 @@ const routes = (
                 clusterId={Number(props.match.params.clusterId)}
               />
             }
+            {...props}
+          />
+        )}
+      />
+
+      <Route
+        path='/:slugId/workspace/:workspaceId/add-datasource'
+        exact
+        render={(props) => (
+          <WorkspaceMain
+            index='11'
+            slugId={props.match.params.slugId}
+            content={<AddDatasource orgSlugId={props.match.params.slugId} workspaceId={Number(props.match.params.workspaceId)} />}
             {...props}
           />
         )}

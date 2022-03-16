@@ -1,0 +1,74 @@
+@import "../../../variables.scss";
+
+.add-datasource-wrapper {
+  .header-title {
+    padding: 15px;
+    background-color: #fff;
+    font-size: 14px;
+    color: $lt-font-color;
+    font-weight: 600;
+    border-bottom: 1px solid $lt-card-border;
+  }
+  .data-source-menu {
+    background-color: #fff;
+    padding: 20px 0px 0 0px;
+    .ant-menu-item {
+      padding: 0 15px;
+      font-weight: 400;
+    }
+  }
+  .data-source-list {
+    background-color: #fff;
+    height: 600px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    .data-source-section {
+      padding: 20px 20px;
+      border-bottom: 1px solid $lt-card-border;
+      &:last-child {
+        padding-bottom: 180px;
+      }
+      .tabs-title {
+        font-size: 16px;
+        font-weight: 500;
+        color: $lt-font-color;
+        padding-bottom: 15px;
+      }
+      .sources-cards {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .datasource-card {
+        width: 300px;
+        min-height: 160px;
+        position: relative;
+        margin: 0 20px 20px 0;
+        .ant-card-body {
+          padding: 10px 15px;
+        }
+
+        .soruce-name {
+          font-size: 18px;
+          font-weight: 500;
+          color: $lt-font-color;
+        }
+        .source-desc {
+          margin-top: -5px;
+          font-size: 14px;
+          font-weight: 500;
+          color: $lt-font-dull-color;
+        }
+        .source-icon {
+          font-size: 30px;
+        }
+        .add-btn {
+          position: absolute;
+          bottom: 15px;
+          right: 20px;
+        }
+      }
+    }
+  }
+}
