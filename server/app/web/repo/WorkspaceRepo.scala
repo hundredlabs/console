@@ -5,7 +5,7 @@ import web.models.{WorkspaceAPIKey, WorkspaceId}
 import web.models.rbac.MemberProfile
 import web.services.SecretStore
 import play.api.cache.SyncCacheApi
-import web.models.requests.{CreateOrgWorkspace, WorkspaceView}
+import web.models.requests.{ConnectionView, CreateOrgWorkspace, WorkspaceConnection, WorkspaceView}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -51,6 +51,14 @@ trait WorkspaceRepo {
     * @return
     */
   def updateCurrentWorkspace(memberId: Long, workspaceId: Long, orgId: Long): Future[Option[MemberProfile]]
+
+  def addConnection(workspaceId: Long, connection: WorkspaceConnection): Future[Either[Throwable, Long]]
+
+  def updateConnection(workspaceId: Long, connectionId: Long, connection: WorkspaceConnection): Future[Either[Throwable, Boolean]]
+
+  def listConnections(workspaceId: Long): Future[Either[Throwable, Seq[ConnectionView]]]
+
+  def deleteConnection(workspaceId: Long, connectionId: Long): Future[Either[Throwable, Boolean]]
 
 
 }

@@ -20,6 +20,7 @@ import HostsList from "../pages/workspace/HostList/HostList";
 import KafkaClusterDashboard from "../pages/workspace/Clusters/KafkaClusterDashboard";
 import HDFSClusterDashboard from "../pages/workspace/Clusters/HDFSClusterDashboard";
 import AddDatasource from "../pages/workspace/AddDatasource/AddDatasource";
+import { FileBrowser, FileManager } from "../components/FileBrowser/FileBrowser";
 
 const routes = (
   <div>
@@ -62,6 +63,11 @@ const routes = (
         path='/:slugId/workspace/:workspaceId/hosts'
         exact
         render={(props) => <WorkspaceMain index='10' slugId={props.match.params.slugId} content={<HostsList />} {...props} />}
+      />
+      <Route
+        path='/:slugId/workspace/:workspaceId/s3'
+        exact
+        render={(props) => <WorkspaceMain index='10' slugId={props.match.params.slugId} content={<FileManager />} {...props} />}
       />
       <Route
         path='/:slugId/settings'

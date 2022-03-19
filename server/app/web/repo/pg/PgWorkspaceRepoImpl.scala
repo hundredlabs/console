@@ -4,7 +4,7 @@ import com.goterl.lazycode.lazysodium.utils.KeyPair
 import javax.inject.Inject
 import web.models.{WorkspaceAPIKey, WorkspaceId}
 import web.models.rbac.{AccessRoles, MemberProfile, SubjectType, Theme}
-import web.models.requests.{CreateOrgWorkspace, WorkspaceView}
+import web.models.requests.{ConnectionView, CreateOrgWorkspace, WorkspaceConnection, WorkspaceView}
 import web.repo.WorkspaceRepo
 import web.services.{DefaultKeyPairGenerator, SecretStore}
 import web.utils.DateUtil
@@ -195,6 +195,65 @@ class PgWorkspaceRepoImpl @Inject()(blockingEC: ExecutionContext) extends Worksp
     }
   }
 
+  override def addConnection(workspaceId: Long, connection: WorkspaceConnection): Future[Either[Throwable, Long]] = Future {
+    blocking {
+      Try {
+        DB localTx { implicit session =>
+          sql"""INSERT INTO connections(name, connection_provider, properties, connection_schema_ver, workspace_id, dt_created)
+             VALUES(${connection.name}, ${connection.provider}, ${connection.encProperties}, ${connection.schemaVersion},
+             ${workspaceId}, ${DateUtil.now})"""
+            .updateAndReturnGeneratedKey()
+            .apply()
+        }
+      }.toEither
+    }
+  }
 
+  override def updateConnection(workspaceId: Long, connectionId: Long, connection: WorkspaceConnection): Future[Either[Throwable, Boolean]] = Future {
+    blocking {
+      Try {
+        DB localTx { implicit session =>
+          sql"""UPDATE connections SET name = ${connection.name}, properties = ${connection.encProperties},
+                connection_schema_ver = ${connection.schemaVersion} WHERE workspace_id = ${workspaceId} AND id = ${connectionId}
+             """
+            .update()
+            .apply() > 0
+        }
+      }.toEither
+    }
+  }
 
+  override def listConnections(workspaceId: Long): Future[Either[Throwable, Seq[ConnectionView]]] = Future {
+    blocking {
+      Try {
+        DB localTx { implicit session =>
+          sql"""SELECT id, name, connection_provider, connection_schema_ver, dt_created FROM connections WHERE
+                workspace_id = ${workspaceId}
+             """
+            .map{ row =>
+              ConnectionView(id = row.long("id"),
+                name = row.string("name"),
+                schemaVersion = row.string("connection_schema_ver"),
+                provider = row.string("connection_provider"),
+                dateCreated = row.dateTime("dt_created").toEpochSecond)
+            }
+            .list()
+            .apply()
+        }
+      }.toEither
+    }
+  }
+
+  override def deleteConnection(workspaceId: Long, connectionId: Long): Future[Either[Throwable, Boolean]] = Future {
+    blocking {
+      Try {
+        DB localTx { implicit session =>
+          sql"""DELETE FROM connections WHERE workspace_id = ${workspaceId} AND id = ${connectionId}
+             """
+            .update()
+            .apply() > 0
+        }
+      }.toEither
+    }
+  }
 }

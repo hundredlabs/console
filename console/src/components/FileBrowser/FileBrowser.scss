@@ -1,0 +1,99 @@
+@import "../../variables.scss";
+
+.file-browser-controls {
+  height: 52px;
+  padding: 10px 20px 10px 20px;
+  border-top: 1px solid #eee;
+  background: $lt-bg;
+  input.ant-input {
+    border: 1px solid $lt-card-bg;
+
+    &:focus {
+      border: 1px solid $lt-card-bg;
+      box-shadow: none;
+    }
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    border: none;
+    justify-content: center;
+
+    svg {
+      color: $lt-font-dull-color;
+      transition: all 0.5s;
+
+      &:hover {
+        color: $lt-btn-primary;
+      }
+    }
+  }
+}
+
+.file-list {
+  .file-item {
+    background: $lt-bg;
+    padding: 8px 20px;
+    background-color: $lt-card-bg;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+
+    &:hover {
+      background-color: $lt-row-hover;
+
+      ul.ant-list-item-action {
+        display: block;
+      }
+
+      div.ant-list-item-meta-avatar {
+        & > i {
+          color: $lt-console;
+        }
+      }
+    }
+  }
+  ul.ant-list-item-action {
+    display: none;
+    li {
+      padding: 0 2px;
+
+      button.ant-btn-icon-only {
+        width: 24px;
+        height: 24px;
+      }
+
+      & > button {
+        display: flex;
+        align-items: center;
+        border: none;
+        justify-content: center;
+
+        svg {
+          color: $lt-font-dull-color;
+          transition: all 0.5s;
+
+          &:hover {
+            color: $lt-btn-primary;
+          }
+        }
+      }
+    }
+  }
+  div.ant-list-item-meta-avatar {
+    & > i {
+      font-size: 1.2rem;
+      color: $lt-font-dull-color;
+    }
+  }
+  h4.ant-list-item-meta-title {
+    color: $lt-font-color;
+    font-size: 13px;
+    line-height: 0.7;
+  }
+  .ant-list-item-meta-description {
+    color: $lt-font-dull-color;
+    font-size: 10px;
+    line-height: 1;
+  }
+}

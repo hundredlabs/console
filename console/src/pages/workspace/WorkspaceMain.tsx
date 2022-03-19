@@ -1,6 +1,7 @@
 import * as React from "react";
-import { DownOutlined } from "@ant-design/icons";
-import { Layout, Menu, Dropdown, Tooltip, Tag } from "antd";
+import { Link } from "react-router-dom";
+import GitHubButton from "react-github-btn";
+import { Layout, Menu, Dropdown, Button, Space, Tooltip, Tag } from "antd";
 import { connect } from "react-redux";
 import { appLoaded } from "../../actions/app";
 import { User, UserContext } from "../../store/User";
@@ -105,57 +106,45 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
 
   return (
     <Layout className='main-app-wrapper'>
-      <Sider trigger={null} collapsible collapsed={true} className='workspace-side-nav hex-sider-light'>
-        <div>
-          <div className='wks-name-ctr wks-name-ctr-light'>
-            <Tooltip title={context.currentUser.profile.workspaceName} placement='right'>
-              <div className='wks-name wks-name-light'>
-                <Hexagon size={state.collapsed ? 23 : 20} />
-                {user && !state.collapsed && (
-                  <div className='wks-header'>
-                    <div className='header'>
-                      {context.currentUser.profile && <span style={onCollaps}>{trimText(context.currentUser.profile.workspaceName)}</span>}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Tooltip>
-          </div>
-        </div>
-        <div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <ConsoleLogo />
-            <Tag style={{ margin: "0 15px 10px 15px" }} color='geekblue'>
-              {packageJson?.version}
-            </Tag>
-          </div>
-        </div>
-      </Sider>
       <Sider trigger={null} collapsed={false} className='workspace-side-nav hex-sider-light'>
-        <Dropdown overlay={orgMenu} trigger={["click"]} overlayStyle={{ width: 200 }}>
-          <div className={`logo`} style={{ height: 52, marginBottom: 20 }}>
-            {user && (
-              <span className='brand-name'>{context.currentUser.profile && `${trimText(context.currentUser.profile.workspaceName)}`}</span>
-            )}
-            <DownOutlined />
-          </div>
-        </Dropdown>
+        <div className='workspace-header'>
+          <Dropdown overlay={orgMenu} trigger={["click"]} overlayStyle={{ width: 200 }}>
+            <div className={`logo`}>
+              <Hexagon size={state.collapsed ? 23 : 20} />
+              {user && (
+                <span className='brand-name'>
+                  {context.currentUser.profile && `${trimText(context.currentUser.profile.workspaceName)}`}
+                </span>
+              )}
+            </div>
+          </Dropdown>
+          <Dropdown overlay={orgMenu} trigger={["click"]} overlayStyle={{ width: 200 }}>
+            <div className={`logo`}>
+              {context.currentUser.profile && (
+                <OrgThumbnailImg name={context.currentUser.profile.orgName} thumbnail={context.currentUser.profile.orgThumbnail} />
+              )}
+            </div>
+          </Dropdown>
+        </div>
         <CustomScroll heightRelativeToParent='calc(100vh - 100px)'>
           <Menu theme='light' mode='inline' defaultSelectedKeys={[]} defaultOpenKeys={["0"]}>
             <Menu.Item
               key='11'
-              className='center-name add-datasource-btn'
+              className='center-name'
               onClick={(e) =>
                 history.push(
                   `/${context.currentUser.profile?.orgSlugId}/workspace/${context.currentUser.profile?.workspaceId}/add-datasource`
                 )
-              }
-              icon={
-                <i style={{ fontSize: 12, marginTop: 4, color: "#fff" }}>
-                  <BsPlusLg />
-                </i>
               }>
-              {context.currentUser.profile && <span>Add Datasource</span>}
+              <Button
+                type='primary'
+                icon={
+                  <i style={{ fontSize: 12, marginTop: 4, marginRight: 5, color: "#fff" }}>
+                    <BsPlusLg />
+                  </i>
+                }>
+                Add Datasource
+              </Button>
             </Menu.Item>
             <Menu.Item
               key='10'
@@ -218,22 +207,24 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
             </SubMenu>
           </Menu>
         </CustomScroll>
-        <Dropdown overlay={orgMenu} trigger={["click"]} overlayStyle={{ width: 200 }}>
-          <div className={`logo`} style={{ height: 52 }}>
-            {context.currentUser.profile && (
-              <OrgThumbnailImg name={context.currentUser.profile.orgName} thumbnail={context.currentUser.profile.orgThumbnail} />
-            )}
-            {user && (
-              <span className='brand-name'>{context.currentUser.profile && `${trimText(context.currentUser.profile.orgName)}`}</span>
-            )}
-            <DownOutlined />
-          </div>
-        </Dropdown>
+
+        <div className='brand-footer'>
+          <Dropdown overlay={orgMenu} trigger={["click"]} overlayStyle={{ width: 200 }}>
+            <div className='brand-logo-container'>
+              <ConsoleLogo />
+              <span className='brand-name'>Gigahex</span>
+            </div>
+          </Dropdown>
+          <GitHubButton href='https://github.com/gigahexhq/console' data-show-count='true' aria-label='Star gigahexhq/console on GitHub'>
+            Star
+          </GitHubButton>
+        </div>
       </Sider>
       <Layout className='site-layout'>
         <Content
           className='site-layout-background'
           style={{
+            padding: "0px",
             minHeight: 280,
           }}>
           {content}
