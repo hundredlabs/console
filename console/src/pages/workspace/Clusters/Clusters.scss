@@ -1,7 +1,6 @@
 @import "../../../variables.scss";
 
 .clusters-container {
-  background-color: $lt-bg;
   // min-height: 100vh;
 
   .option-icon {
@@ -243,15 +242,24 @@
 }
 
 .tbl-cluster {
+  .file-icon {
+    & > div.ant-space-item {
+      & > i {
+        display: flex;
+        font-size: 1rem;
+        color: $lt-font-dull-color;
+      }
+    }
+  }
   th.table-cell-light {
-    background-color: $lt-table-header-cell;
+    background-color: $lt-card-bg;
     color: $lt-font-dull-color;
   }
   th {
     font-size: 11.5px;
   }
   .ant-table-tbody > tr > td {
-    font-size: 14px;
+    font-size: 13px;
     padding: 12px;
   }
 

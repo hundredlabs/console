@@ -2,11 +2,15 @@ import React, { FC } from "react";
 import "./AddDatasource.scss";
 import { Drawer, Menu } from "antd";
 
-import DatasourceCard from "../../../components/Cards/DatasourceCard";
+import { ConnectionCard } from "../../../components/Cards/DatasourceCard";
+import ServiceConnectionBuilder from "./ServiceConnectionBuilder";
+interface ConnectionMeta {
+  name: string;
+  connType: string;
+  description: string;
+}
 
-import { IconAWS } from "../../../components/Icons/PlatformIcons";
-
-const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = () => {
+const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = ({ orgSlugId, workspaceId }) => {
   const [selectedKey, setSelectedKey] = React.useState("file-system");
   const [sourceDrawer, setSrouceDrawer] = React.useState<{ isOpen: boolean; name: string }>({
     isOpen: false,
@@ -23,6 +27,34 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = () => {
   const openSourceDrawer = (name: string) => {
     setSrouceDrawer({ ...sourceDrawer, isOpen: true, name: name });
   };
+
+  const connections: ConnectionMeta[] = [
+    {
+      name: "S3",
+      connType: "fs",
+      description: "Add the S3 bucket to browse, upload and preview objects.",
+    },
+    {
+      name: "Postgres",
+      connType: "db",
+      description: "Add the S3 bucket to browse, upload and preview objects.",
+    },
+    {
+      name: "MySQL",
+      connType: "db",
+      description: "Add the S3 bucket to browse, upload and preview objects.",
+    },
+    {
+      name: "MariaDB",
+      connType: "db",
+      description: "Add the S3 bucket to browse, upload and preview objects.",
+    },
+    {
+      name: "Kafka",
+      connType: "messaging",
+      description: "Add the S3 bucket to browse, upload and preview objects.",
+    },
+  ];
 
   return (
     <div className='add-datasource-wrapper'>
@@ -50,46 +82,42 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = () => {
         <div id='file-system' className='data-source-section'>
           <div className='tabs-title'>File System</div>
           <div className='sources-cards'>
-            <DatasourceCard
-              sourceIcon={<IconAWS className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives lorem sdf sdfsdfs dsfd sdfdsf sdfsdfsd ssfddsf'
-              onClickAdd={openSourceDrawer}
-              btnText='ADD BUCKET'
-            />
+            {connections
+              .filter((c) => c.connType === "fs")
+              .map((c, i) => (
+                <ConnectionCard key={i} name={c.name} description={c.description} onClickAdd={openSourceDrawer} />
+              ))}
           </div>
         </div>
         <div id='databases' className='data-source-section'>
           <div className='tabs-title'>Databases</div>
           <div className='sources-cards'>
-            <DatasourceCard
-              sourceIcon={<IconAWS className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={openSourceDrawer}
-              btnText='ADD BUCKET'
-            />
+            {connections
+              .filter((c) => c.connType === "db")
+              .map((c, i) => (
+                <ConnectionCard key={i} name={c.name} description={c.description} onClickAdd={openSourceDrawer} />
+              ))}
           </div>
         </div>
         <div id='messaging-system' className='data-source-section'>
           <div className='tabs-title'>Messaging System</div>
           <div className='sources-cards'>
-            <DatasourceCard
-              sourceIcon={<IconAWS className='source-icon' selected={true} />}
-              sourceName='AWS S3'
-              sourceDesc='Object storage built to retrives'
-              onClickAdd={openSourceDrawer}
-              btnText='ADD BUCKET'
-            />
+            {connections
+              .filter((c) => c.connType === "messaging")
+              .map((c) => (
+                <ConnectionCard key={c.name} name={c.name} description={c.description} onClickAdd={openSourceDrawer} />
+              ))}
           </div>
         </div>
       </div>
 
-      <Drawer title={sourceDrawer.name} placement='right' width={300} onClose={onCloseDrawer} visible={sourceDrawer.isOpen}>
-        <p>Some contents...</p>
-        <p>Some contents...</p>
-        <p>Some contents...</p>
-      </Drawer>
+      <ServiceConnectionBuilder
+        orgSlugId={orgSlugId}
+        workspaceId={workspaceId}
+        service={sourceDrawer.name}
+        isOpen={sourceDrawer.isOpen}
+        onClose={onCloseDrawer}
+      />
     </div>
   );
 };

@@ -7,14 +7,15 @@ import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.{FileIO, Flow, Sink, Source}
 import com.gigahex.commons.models.{ClusterProvider, ClusterStatus, NewCluster}
+import com.gigahex.services.ServiceConnection
 import com.mohiva.play.silhouette.api.{HandlerResult, Silhouette}
 import controllers.AssetsFinder
 import javax.inject.Inject
-import web.models.{ ClusterJsonFormat, ClusterMetric, ErrorResponse, IllegalParam, InternalServerErrorResponse, NewSandboxCluster, OrgDetail, UserNotAuthenticated, VerifyCluster}
+import web.models.{ClusterJsonFormat, ClusterMetric, ErrorResponse, IllegalParam, InternalServerErrorResponse, NewSandboxCluster, OrgDetail, UserNotAuthenticated, VerifyCluster}
 import web.models.formats.{AuthResponseFormats, SecretsJsonFormat}
 import web.models.rbac.{AccessPolicy, SubjectType}
-import web.models.requests.{CreateOrgWorkspace, OrgRequestsJsonFormat, ProvisionWorkspace}
-import web.services.{ClusterService, MemberService, SecretStore}
+import web.models.requests.{CreateOrgWorkspace, OrgRequestsJsonFormat, ProvisionWorkspace, WorkspaceConnection}
+import web.services.{ClusterService, MemberService, SecretStore, WorkspaceService}
 import play.api.{Configuration, Environment, Play}
 import play.api.cache.SyncCacheApi
 import play.api.i18n.I18nSupport
@@ -33,6 +34,7 @@ class WorkspaceController @Inject()(
     silhouette: Silhouette[DefaultEnv],
     memberService: MemberService,
     clusterService: ClusterService,
+    workspaceService: WorkspaceService,
     @NamedCache("workspace-keypairs") workspaceKeyCache: SyncCacheApi,
     @NamedCache("session-cache") userCache: SyncCacheApi,
     secretStore: SecretStore,
@@ -214,6 +216,76 @@ class WorkspaceController @Inject()(
           .recoverWith {
             case e: Exception =>
               Future.successful(InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage))))
+          }
+      } else {
+        Future.successful(Forbidden)
+      }
+    }
+  }
+
+  def addConnection = silhouette.UserAwareAction.async(validateJson[WorkspaceConnection]){ implicit request =>
+    handleMemberRequest(request, memberService) { (roles, profile) =>
+      if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
+        workspaceService.addConnection(profile.workspaceId, request.body)
+            .map {
+              case Left(e) => InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage)))
+              case Right(value) => Created(Json.toJson(Map("connectionId" -> value)))
+            }
+      } else {
+        Future.successful(Forbidden)
+      }
+    }
+  }
+
+  def updateConnection(connectionId: Long) = silhouette.UserAwareAction.async(validateJson[WorkspaceConnection]){ implicit request =>
+    handleMemberRequest(request, memberService) { (roles, profile) =>
+      if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
+        workspaceService.updateConnection(profile.workspaceId, connectionId, request.body)
+          .map {
+            case Left(e) => InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage)))
+            case Right(value) => Ok(Json.toJson(Map("success" -> value)))
+          }
+      } else {
+        Future.successful(Forbidden)
+      }
+    }
+  }
+
+  def deleteConnection(connectionId: Long) = silhouette.UserAwareAction.async{ implicit request =>
+    handleMemberRequest(request, memberService) { (roles, profile) =>
+      if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
+        workspaceService.deleteConnection(profile.workspaceId, connectionId)
+          .map {
+            case Left(e) => InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage)))
+            case Right(value) => Ok(Json.toJson(Map("success" -> value)))
+          }
+      } else {
+        Future.successful(Forbidden)
+      }
+    }
+  }
+
+  def listConnections = silhouette.UserAwareAction.async{ implicit request =>
+    handleMemberRequest(request, memberService) { (roles, profile) =>
+      if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
+        workspaceService.listConnections(profile.workspaceId)
+          .map {
+            case Left(e) => InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage)))
+            case Right(value) => Ok(Json.toJson(value))
+          }
+      } else {
+        Future.successful(Forbidden)
+      }
+    }
+  }
+
+  def testConnection = silhouette.UserAwareAction.async{ implicit request =>
+    handleMemberRequest(request, memberService) { (roles, profile) =>
+      if (hasWorkspaceManagePermission(profile, roles, profile.orgId, profile.workspaceId)) {
+        workspaceService.listConnections(profile.workspaceId)
+          .map {
+            case Left(e) => InternalServerError(Json.toJson(InternalServerErrorResponse(request.path, e.getMessage)))
+            case Right(value) => Ok(Json.toJson(value))
           }
       } else {
         Future.successful(Forbidden)

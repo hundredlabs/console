@@ -2,6 +2,9 @@ import WebService from "./WebService";
 import { IErrorHandler } from "./IErrorHander";
 import { BadRequest, InternalServerError } from "./SparkService";
 import { HDFSStrogeFiles } from "./LocalHDFSFileService";
+import { PubKeyResponse } from "./AuthService";
+import { message } from "antd";
+const _sodium = require("libsodium-wrappers");
 
 export interface IllegalParam {
   path: string;
@@ -16,7 +19,17 @@ export type UnAuthorized = {
   message: string;
 };
 
-export type Status = "failed" | "running" | "waiting" | "passed" | "completed" | "succeeded" | "exceeded" | "not started" | "skipped" | "starting";
+export type Status =
+  | "failed"
+  | "running"
+  | "waiting"
+  | "passed"
+  | "completed"
+  | "succeeded"
+  | "exceeded"
+  | "not started"
+  | "skipped"
+  | "starting";
 
 export type ClusterStatus =
   | "new"
@@ -369,7 +382,10 @@ class WorkspaceService extends IErrorHandler {
 
   deleteCluster = async (id: number, onSuccess: (workspaces: { clusterRemoved: boolean }) => void) => {
     try {
-      const response = this.webAPI.delete<{ clusterRemoved: boolean } | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/clusters/${id}`, {});
+      const response = this.webAPI.delete<{ clusterRemoved: boolean } | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/clusters/${id}`,
+        {}
+      );
 
       const r = await response;
       if (r.parsedBody) {
@@ -387,7 +403,10 @@ class WorkspaceService extends IErrorHandler {
 
   notifyWhenAvailable = async (onSuccess: (result: { saved: boolean }) => void, onFailure: () => void) => {
     try {
-      const response = this.webAPI.post<{ saved: boolean } | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/notify-feature`, {});
+      const response = this.webAPI.post<{ saved: boolean } | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/notify-feature`,
+        {}
+      );
 
       const r = await response;
 
@@ -581,7 +600,9 @@ class WorkspaceService extends IErrorHandler {
 
   getSparkClustertHistory = async (cId: number, onSuccess: (history: SparkClusterHistory[]) => void) => {
     try {
-      const response = this.webAPI.get<SparkClusterHistory[] | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/spark/${cId}/history/api/v1/applications`);
+      const response = this.webAPI.get<SparkClusterHistory[] | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/spark/${cId}/history/api/v1/applications`
+      );
       const r = await response;
       if (r.parsedBody) {
         const result = r.parsedBody as SparkClusterHistory[];
@@ -598,7 +619,10 @@ class WorkspaceService extends IErrorHandler {
 
   startCluster = async (cId: number, service: "spark" | "kafka" | "hadoop", onSuccess: (r: ClusterActionResponse) => void) => {
     try {
-      const response = this.webAPI.post<{} | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/clusters/${cId}/services/${service}/start`, {});
+      const response = this.webAPI.post<{} | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/clusters/${cId}/services/${service}/start`,
+        {}
+      );
       const r = await response;
       if (r.parsedBody) {
         const result = r.parsedBody as { status: ClusterStatus };
@@ -685,7 +709,9 @@ class WorkspaceService extends IErrorHandler {
 
   getKafkaConsumerGroups = async (cId: number, onSuccess: (topic: ConsumerGroupInfo[]) => void) => {
     try {
-      const response = this.webAPI.get<ConsumerGroupInfo[] | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/kafka/${cId}/consumer-groups`);
+      const response = this.webAPI.get<ConsumerGroupInfo[] | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/kafka/${cId}/consumer-groups`
+      );
 
       const r = await response;
       if (r.parsedBody) {
@@ -703,7 +729,9 @@ class WorkspaceService extends IErrorHandler {
 
   getKafkaClusterBrokers = async (cId: number, onSuccess: (topic: KafkaClusterBrokers[]) => void) => {
     try {
-      const response = this.webAPI.get<KafkaClusterBrokers[] | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/kafka/${cId}/nodes`);
+      const response = this.webAPI.get<KafkaClusterBrokers[] | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/kafka/${cId}/nodes`
+      );
 
       const r = await response;
       if (r.parsedBody) {
@@ -719,12 +747,21 @@ class WorkspaceService extends IErrorHandler {
     } catch (e) {}
   };
 
-  getKafkaTopicMessages = async (cId: number, topic: string, maxResults: number, startingFrom: string, onSuccess: (topic: TopicMessage[]) => void) => {
+  getKafkaTopicMessages = async (
+    cId: number,
+    topic: string,
+    maxResults: number,
+    startingFrom: string,
+    onSuccess: (topic: TopicMessage[]) => void
+  ) => {
     try {
-      const response = this.webAPI.post<TopicMessage[] | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/kafka/${cId}/topics/${topic}/messages`, {
-        maxResults: maxResults,
-        startingFrom: startingFrom,
-      });
+      const response = this.webAPI.post<TopicMessage[] | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/kafka/${cId}/topics/${topic}/messages`,
+        {
+          maxResults: maxResults,
+          startingFrom: startingFrom,
+        }
+      );
 
       const r = await response;
       if (r.parsedBody) {
@@ -742,7 +779,9 @@ class WorkspaceService extends IErrorHandler {
 
   getKafkaTopicPartitions = async (cId: number, topic: string, onSuccess: (topic: PartitionDetails[]) => void) => {
     try {
-      const response = this.webAPI.get<PartitionDetails[] | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/kafka/${cId}/topics/${topic}/partitions`);
+      const response = this.webAPI.get<PartitionDetails[] | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/kafka/${cId}/topics/${topic}/partitions`
+      );
 
       const r = await response;
       if (r.parsedBody) {
@@ -760,7 +799,9 @@ class WorkspaceService extends IErrorHandler {
 
   getKafkaTopicConfigs = async (cId: number, topic: string, onSuccess: (topic: TopicConfigDetail[]) => void) => {
     try {
-      const response = this.webAPI.get<TopicConfigDetail[] | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/kafka/${cId}/topics/${topic}/configs`);
+      const response = this.webAPI.get<TopicConfigDetail[] | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/kafka/${cId}/topics/${topic}/configs`
+      );
 
       const r = await response;
       if (r.parsedBody) {
@@ -778,7 +819,9 @@ class WorkspaceService extends IErrorHandler {
 
   getKafkaClusterTopic = async (cId: number, onSuccess: (topic: KafkaClusterTopic[]) => void) => {
     try {
-      const response = this.webAPI.get<KafkaClusterTopic[] | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/kafka/${cId}/topics`);
+      const response = this.webAPI.get<KafkaClusterTopic[] | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/kafka/${cId}/topics`
+      );
 
       const r = await response;
       if (r.parsedBody) {
@@ -794,13 +837,22 @@ class WorkspaceService extends IErrorHandler {
     } catch (e) {}
   };
 
-  createKafkaTopic = async (cId: number, name: string, partitions: number, replicas: number, onSuccess: (r: CreateTopicResponse) => void) => {
+  createKafkaTopic = async (
+    cId: number,
+    name: string,
+    partitions: number,
+    replicas: number,
+    onSuccess: (r: CreateTopicResponse) => void
+  ) => {
     try {
-      const response = this.webAPI.put<{ uuid: string } | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/kafka/${cId}/topics`, {
-        name: name,
-        partitions: partitions,
-        replicationFactor: replicas,
-      });
+      const response = this.webAPI.put<{ uuid: string } | IllegalParam | UnAuthorized | InternalServerError>(
+        `/web/v1/kafka/${cId}/topics`,
+        {
+          name: name,
+          partitions: partitions,
+          replicationFactor: replicas,
+        }
+      );
       const r = await response;
       if (r.parsedBody) {
         const result = r.parsedBody as CreateTopicResponse;
@@ -832,6 +884,33 @@ class WorkspaceService extends IErrorHandler {
         this.showError(err.message);
       }
     } catch (e) {}
+  };
+
+  saveConnection = async (name: string, provider: string, props_str: string, schemaVersion: number, onSuccess: (id: number) => void) => {
+    await _sodium.ready;
+    const sodium = _sodium;
+
+    const pubKeyResponse = await this.webAPI.get<PubKeyResponse>(`/web/secrets/pub-key`);
+    if (pubKeyResponse.parsedBody) {
+      const pubKey = pubKeyResponse.parsedBody.key;
+
+      const pubKeyUint8 = new Uint8Array(Buffer.from(pubKey, "hex"));
+      const cipherProps = sodium.crypto_box_seal(props_str, pubKeyUint8, "hex");
+
+      const savedResponse = await this.webAPI.post<{ connectionId: number } | FailedResponse>(`/web/v1/connections`, {
+        name: name,
+        provider: provider,
+        encProperties: cipherProps,
+        schemaVersion: schemaVersion,
+      });
+
+      if (savedResponse.status === 201 && savedResponse.parsedBody) {
+        const creationResult = savedResponse.parsedBody as { connectionId: number };
+        onSuccess(creationResult.connectionId);
+      } else {
+        message.error((savedResponse.parsedBody as FailedResponse).message);
+      }
+    }
   };
 
   listAllClusters = async (onSuccess: (clusters: ClusterView[]) => void) => {

@@ -39,6 +39,7 @@ POST        /web/v1/clusters/:clusterId/services/:service/start     web.controll
 POST        /web/v1/clusters/:clusterId/stop                        web.controllers.read.ClusterController.stopCluster(clusterId: Long)
 
 # Auth APIs
++ nocsrf
 POST        /web/signin                          web.controllers.auth.AuthController.signIn
 GET         /web/signout                         web.controllers.auth.AuthController.signOut
 GET         /web/account                         web.controllers.auth.MemberController.accountDetails
@@ -48,6 +49,15 @@ GET         /web/v1/orgs                         web.controllers.auth.MemberCont
 POST        /web/v1/workspace                    web.controllers.read.WorkspaceController.createWorkspace
 GET         /web/v1/workspaces                   web.controllers.read.WorkspaceController.listWorkspaces
 POST        /web/v1/onboard                         web.controllers.read.WorkspaceController.onboardMember
+
+#Connections
++ nocsrf
+POST        /web/v1/connections                 web.controllers.read.WorkspaceController.addConnection
++ nocsrf
+PUT        /web/v1/connections/:connectionId    web.controllers.read.WorkspaceController.updateConnection(connectionId: Long)
++ nocsrf
+DELETE     /web/v1/connections/:connectionId    web.controllers.read.WorkspaceController.deleteConnection(connectionId: Long)
+GET       /web/v1/connections                   web.controllers.read.WorkspaceController.listConnections
 
 #Secrets
 GET         /web/secrets/pub-key                                                      web.controllers.read.SecretsController.getPubKey
