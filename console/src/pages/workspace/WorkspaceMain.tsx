@@ -167,7 +167,15 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
                 </i>
               }
               title='Databases'>
-              <Menu.Item key='4'>Option 4</Menu.Item>
+              <Menu.Item
+                key='4'
+                onClick={() => {
+                  history.push(
+                    `/${context.currentUser.profile?.orgSlugId}/workspace/${context.currentUser.profile?.workspaceId}/database/4`
+                  );
+                }}>
+                Postgres
+              </Menu.Item>
               <Menu.Item key='8'>Option 8</Menu.Item>
             </SubMenu>
             <SubMenu

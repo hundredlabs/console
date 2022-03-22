@@ -21,6 +21,7 @@ import KafkaClusterDashboard from "../pages/workspace/Clusters/KafkaClusterDashb
 import HDFSClusterDashboard from "../pages/workspace/Clusters/HDFSClusterDashboard";
 import AddDatasource from "../pages/workspace/AddDatasource/AddDatasource";
 import { FileBrowser, FileManager } from "../components/FileBrowser/FileBrowser";
+import DatabaseBrowse from "../pages/workspace/DatabaseBrowser/DatabaseBrowser";
 
 const routes = (
   <div>
@@ -156,6 +157,24 @@ const routes = (
             index='11'
             slugId={props.match.params.slugId}
             content={<AddDatasource orgSlugId={props.match.params.slugId} workspaceId={Number(props.match.params.workspaceId)} />}
+            {...props}
+          />
+        )}
+      />
+      <Route
+        path='/:slugId/workspace/:workspaceId/database/:databaseId'
+        exact
+        render={(props) => (
+          <WorkspaceMain
+            index='0'
+            slugId={props.match.params.slugId}
+            content={
+              <DatabaseBrowse
+                orgSlugId={props.match.params.slugId}
+                workspaceId={Number(props.match.params.workspaceId)}
+                databaseId={Number(props.match.params.workspaceId)}
+              />
+            }
             {...props}
           />
         )}
