@@ -26,6 +26,7 @@
     "react-app-rewired": "^2.1.4",
     "react-awesome-reveal": "^3.7.0",
     "react-collapsed": "^3.0.0",
+    "react-content-loader": "^6.2.0",
     "react-contenteditable": "^3.3.5",
     "react-custom-scroll": "^4.4.0",
     "react-dom": "^17.0.1",

@@ -11,10 +11,8 @@ import { PgConnection } from "../../../components/connections/PostgresConnection
 export const AddConnectionProvider: FC<{
   service: string;
   connectionForm: FormInstance;
-  orgSlugId: string;
-  workspaceId: number;
   onConnectionSave?: (conn: ConnectionConfig) => void;
-}> = ({ service, connectionForm, orgSlugId, workspaceId, onConnectionSave }) => {
+}> = ({ service, connectionForm, onConnectionSave }) => {
   const [providerForm, setProvider] = useState(false);
   const [processing, setProcessing] = useState<{
     isProcessing: boolean;

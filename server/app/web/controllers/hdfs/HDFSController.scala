@@ -11,8 +11,6 @@ import com.mohiva.play.silhouette.api.Silhouette
 import controllers.AssetsFinder
 import javax.inject.{Inject, Named}
 import play.api.Configuration
-import web.actors.clusters.spark.SparkProcesses
-import web.controllers.kafka.KafkaClientHandler
 import web.models
 import web.models.{ErrorResponse, InternalServerErrorResponse}
 import web.models.cluster.{HDFSConfigurationRequest, HDFSJsonFormats, HDFSProcesses, KafkaClusterJsonFormatter, KafkaConfigurationRequest}

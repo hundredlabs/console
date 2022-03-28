@@ -52,17 +52,36 @@ POST        /web/v1/onboard                         web.controllers.read.Workspa
 
 #Connections
 + nocsrf
-POST        /web/v1/connections                 web.controllers.read.WorkspaceController.addConnection
+POST        /web/v1/connections                        web.controllers.read.WorkspaceController.addConnection
 + nocsrf
-PUT        /web/v1/connections/:connectionId    web.controllers.read.WorkspaceController.updateConnection(connectionId: Long)
+PUT         /web/v1/connections/:connectionId          web.controllers.read.WorkspaceController.updateConnection(connectionId: Long)
+DELETE      /web/v1/connections/:connectionId          web.controllers.read.WorkspaceController.deleteConnection(connectionId: Long)
+GET         /web/v1/connections                        web.controllers.read.WorkspaceController.listConnections
+GET         /web/v1/connection-providers               web.controllers.read.WorkspaceController.listConnectionProviders
+GET         /web/v1/connections/:connectionId          web.controllers.read.WorkspaceController.testConnection(connectionId: Long)
+
+#File systems
+GET         /web/v1/fs/:connectionId                   web.controllers.FSController.listRootLevelFiles(connectionId: Long)
+GET         /web/v1/fs/:connectionId/path/*path        web.controllers.FSController.listFiles(connectionId: Long, path: String)
 + nocsrf
-DELETE     /web/v1/connections/:connectionId    web.controllers.read.WorkspaceController.deleteConnection(connectionId: Long)
-GET       /web/v1/connections                   web.controllers.read.WorkspaceController.listConnections
+PUT         /web/v1/fs/:connectionId/path/*path         web.controllers.FSController.newDirectory(connectionId: Long, path: String)
++ nocsrf
+DELETE      /web/v1/fs/:connectionId/path/*path         web.controllers.FSController.deleteFile(connectionId: Long, path: String)
++ nocsrf
+PUT         /web/v1/fs/:connectionId/upload/*path      web.controllers.FSController.upload(connectionId: Long, path: String)
+
+#Databases
+GET         /web/v1/rdbms/:connectionId/summary                         web.controllers.DatabasesController.summary(connectionId: Long)
+GET         /web/v1/rdbms/:connectionId/catalogs                        web.controllers.DatabasesController.catalogs(connectionId: Long)
+GET         /web/v1/rdbms/:connectionId/schemas                         web.controllers.DatabasesController.schemas(connectionId: Long)
+GET         /web/v1/rdbms/:connectionId/schemas/:schema/tables          web.controllers.DatabasesController.listTables(connectionId: Long, schema: String)
++ nocsrf
+PUT         /web/v1/rdbms/:connectionId/execute                         web.controllers.DatabasesController.executeQuery(connectionId: Long)
 
 #Secrets
-GET         /web/secrets/pub-key                                                      web.controllers.read.SecretsController.getPubKey
-POST        /web/v1/name                                                              web.controllers.auth.MemberController.changeName
-POST        /web/v1/password                                                          web.controllers.auth.MemberController.changePassword
+GET         /web/secrets/pub-key                                          web.controllers.read.WorkspaceController.getPublicKey
+POST        /web/v1/name                                                  web.controllers.auth.MemberController.changeName
+POST        /web/v1/password                                              web.controllers.auth.MemberController.changePassword
 
 
 #Workspaces WEB APIs

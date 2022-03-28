@@ -4,6 +4,7 @@ import ReactDOM from "react-dom";
 import App from "./App";
 import configureStore, { history } from "./configureStore";
 import "./App.scss";
+import "./index.css";
 
 const store = configureStore();
 const render = () => {

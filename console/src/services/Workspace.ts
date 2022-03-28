@@ -886,33 +886,6 @@ class WorkspaceService extends IErrorHandler {
     } catch (e) {}
   };
 
-  saveConnection = async (name: string, provider: string, props_str: string, schemaVersion: number, onSuccess: (id: number) => void) => {
-    await _sodium.ready;
-    const sodium = _sodium;
-
-    const pubKeyResponse = await this.webAPI.get<PubKeyResponse>(`/web/secrets/pub-key`);
-    if (pubKeyResponse.parsedBody) {
-      const pubKey = pubKeyResponse.parsedBody.key;
-
-      const pubKeyUint8 = new Uint8Array(Buffer.from(pubKey, "hex"));
-      const cipherProps = sodium.crypto_box_seal(props_str, pubKeyUint8, "hex");
-
-      const savedResponse = await this.webAPI.post<{ connectionId: number } | FailedResponse>(`/web/v1/connections`, {
-        name: name,
-        provider: provider,
-        encProperties: cipherProps,
-        schemaVersion: schemaVersion,
-      });
-
-      if (savedResponse.status === 201 && savedResponse.parsedBody) {
-        const creationResult = savedResponse.parsedBody as { connectionId: number };
-        onSuccess(creationResult.connectionId);
-      } else {
-        message.error((savedResponse.parsedBody as FailedResponse).message);
-      }
-    }
-  };
-
   listAllClusters = async (onSuccess: (clusters: ClusterView[]) => void) => {
     try {
       const response = this.webAPI.get<ClusterView[] | IllegalParam | UnAuthorized | InternalServerError>(`/web/v1/clusters`);

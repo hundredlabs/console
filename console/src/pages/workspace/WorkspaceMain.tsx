@@ -20,6 +20,7 @@ import { getLocalStorage } from "../../services/Utils";
 import WebService from "../../services/WebService";
 import { ConsoleLogo } from "../../components/Icons/ConsoleLogo";
 import "../../style/customScroll.css";
+import Connections, { ConnectionView } from "../../services/Connections";
 
 const { Content, Sider } = Layout;
 const { SubMenu } = Menu;
@@ -65,7 +66,17 @@ const OrgThumbnailImg: React.FC<{ name: string; thumbnail?: string }> = ({ name,
 const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAppLoaded, appLoaded, user }) => {
   const context = React.useContext(UserContext);
 
-  const [state, setState] = React.useState<{ collapsed: boolean }>({ collapsed: getLocalStorage("collaps") || false });
+  const [state, setState] = React.useState<{ collapsed: boolean; activeConnections: ConnectionView[]; loading: boolean }>({
+    collapsed: getLocalStorage("collaps") || false,
+    activeConnections: [],
+    loading: true,
+  });
+
+  React.useEffect(() => {
+    Connections.listConnections((r) => {
+      setState({ ...state, activeConnections: r, loading: false });
+    });
+  }, []);
 
   const handleLogout = () => {
     AuthService.logOut().then((r) => {
@@ -143,7 +154,7 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
                     <BsPlusLg />
                   </i>
                 }>
-                Add Datasource
+                Add Connection
               </Button>
             </Menu.Item>
             <Menu.Item
@@ -159,52 +170,62 @@ const WorkspaceMain: React.FC<IMainProps> = ({ index, content, updateLogin, isAp
               }>
               {context.currentUser.profile && <span>Sandboxes</span>}
             </Menu.Item>
-            <SubMenu
-              key='0'
-              icon={
-                <i className={`side-nav-icon`}>
-                  <FaDatabase />
-                </i>
-              }
-              title='Databases'>
-              <Menu.Item key='4'>Option 4</Menu.Item>
-              <Menu.Item key='8'>Option 8</Menu.Item>
-            </SubMenu>
-            <SubMenu
-              key='1'
-              icon={
-                <i className={`side-nav-icon`}>
-                  <FaFileInvoice />
-                </i>
-              }
-              title='File Systems'>
-              <Menu.ItemGroup key='g1' title='No File Systems'></Menu.ItemGroup>
-            </SubMenu>
-            <SubMenu
-              key='2'
-              icon={
-                <i className={`side-nav-icon`}>
-                  <FaStream />
-                </i>
-              }
-              title='Streams'>
-              <Menu.Item key='5'>Option 5</Menu.Item>
-              <Menu.Item key='6'>Option 6</Menu.Item>
-              <Menu.Item key='7'>Option 5</Menu.Item>
-              <Menu.Item key='8'>Option 6</Menu.Item>
-              <Menu.Item key='9'>Option 5</Menu.Item>
-              <Menu.Item key='10'>Option 10</Menu.Item>
-              <Menu.Item key='11'>Option 11</Menu.Item>
-              <Menu.Item key='12'>Option 12</Menu.Item>
-              <Menu.Item key='13'>Option 13</Menu.Item>
-              <Menu.Item key='14'>Option 14</Menu.Item>
-              <Menu.Item key='15'>Option 15</Menu.Item>
-              <Menu.Item key='16'>Option 16</Menu.Item>
-              <Menu.Item key='17'>Option 17</Menu.Item>
-              <Menu.Item key='18'>Option 18</Menu.Item>
-              <Menu.Item key='19'>Option 19</Menu.Item>
-              <Menu.Item key='20'>Option 20</Menu.Item>
-            </SubMenu>
+            {state.activeConnections.length > 0 && state.activeConnections.filter((ac) => ac.providerCategory === "rdbms").length > 0 && (
+              <SubMenu
+                key='0'
+                icon={
+                  <i className={`side-nav-icon`}>
+                    <FaDatabase />
+                  </i>
+                }
+                title='Databases'>
+                {state.activeConnections
+                  .filter((ac) => ac.providerCategory === "rdbms")
+                  .map((cp) => (
+                    <Menu.Item key={cp.id}>{cp.name}</Menu.Item>
+                  ))}
+              </SubMenu>
+            )}
+            {state.activeConnections.length > 0 && state.activeConnections.filter((ac) => ac.providerCategory === "fs").length > 0 && (
+              <SubMenu
+                key='1'
+                icon={
+                  <i className={`side-nav-icon`}>
+                    <FaFileInvoice />
+                  </i>
+                }
+                title='File Systems'>
+                {state.activeConnections
+                  .filter((ac) => ac.providerCategory === "fs")
+                  .map((cp) => (
+                    <Menu.Item
+                      onClick={(e) =>
+                        history.push(
+                          `/${context.currentUser.profile?.orgSlugId}/workspace/${context.currentUser.profile?.workspaceId}/fs/${cp.id}`
+                        )
+                      }
+                      key={cp.id}>
+                      {cp.name}
+                    </Menu.Item>
+                  ))}
+              </SubMenu>
+            )}
+            {state.activeConnections.length > 0 && state.activeConnections.filter((ac) => ac.providerCategory === "messaging").length > 0 && (
+              <SubMenu
+                key='2'
+                icon={
+                  <i className={`side-nav-icon`}>
+                    <FaFileInvoice />
+                  </i>
+                }
+                title='Messaging Systems'>
+                {state.activeConnections
+                  .filter((ac) => ac.providerCategory === "messaging")
+                  .map((cp) => (
+                    <Menu.Item key={cp.id}>{cp.name}</Menu.Item>
+                  ))}
+              </SubMenu>
+            )}
           </Menu>
         </CustomScroll>
 
