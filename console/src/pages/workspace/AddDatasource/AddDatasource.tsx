@@ -1,14 +1,10 @@
-import React, { FC } from "react";
+import React, { FC, useEffect, useState } from "react";
 import "./AddDatasource.scss";
 import { Drawer, Menu } from "antd";
 
 import { ConnectionCard } from "../../../components/Cards/DatasourceCard";
 import ServiceConnectionBuilder from "./ServiceConnectionBuilder";
-interface ConnectionMeta {
-  name: string;
-  connType: string;
-  description: string;
-}
+import Connections, { ConnectionMeta } from "../../../services/Connections";
 
 const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = ({ orgSlugId, workspaceId }) => {
   const [selectedKey, setSelectedKey] = React.useState("file-system");
@@ -28,37 +24,20 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = ({ orgSlug
     setSrouceDrawer({ ...sourceDrawer, isOpen: true, name: name });
   };
 
-  const connections: ConnectionMeta[] = [
-    {
-      name: "S3",
-      connType: "fs",
-      description: "Add the S3 bucket to browse, upload and preview objects.",
-    },
-    {
-      name: "Postgres",
-      connType: "db",
-      description: "Add the S3 bucket to browse, upload and preview objects.",
-    },
-    {
-      name: "MySQL",
-      connType: "db",
-      description: "Add the S3 bucket to browse, upload and preview objects.",
-    },
-    {
-      name: "MariaDB",
-      connType: "db",
-      description: "Add the S3 bucket to browse, upload and preview objects.",
-    },
-    {
-      name: "Kafka",
-      connType: "messaging",
-      description: "Add the S3 bucket to browse, upload and preview objects.",
-    },
-  ];
+  const [connections, setConnections] = React.useState<{ loading: boolean; connProviders: ConnectionMeta[] }>({
+    loading: true,
+    connProviders: [],
+  });
+
+  useEffect(() => {
+    Connections.getConnectionProviders((r) => {
+      setConnections({ ...connections, loading: false, connProviders: r });
+    });
+  }, []);
 
   return (
     <div className='add-datasource-wrapper'>
-      <div className='header-title'>Add Datasource</div>
+      <div className='header-title'>Add Connection</div>
       <div className='data-source-menu'>
         <Menu onClick={selectMenu} selectedKeys={[selectedKey]} mode='horizontal'>
           <Menu.Item key='file-system'>
@@ -82,8 +61,8 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = ({ orgSlug
         <div id='file-system' className='data-source-section'>
           <div className='tabs-title'>File System</div>
           <div className='sources-cards'>
-            {connections
-              .filter((c) => c.connType === "fs")
+            {connections.connProviders
+              .filter((c) => c.category === "fs")
               .map((c, i) => (
                 <ConnectionCard key={i} name={c.name} description={c.description} onClickAdd={openSourceDrawer} />
               ))}
@@ -92,8 +71,8 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = ({ orgSlug
         <div id='databases' className='data-source-section'>
           <div className='tabs-title'>Databases</div>
           <div className='sources-cards'>
-            {connections
-              .filter((c) => c.connType === "db")
+            {connections.connProviders
+              .filter((c) => c.category === "rdbms")
               .map((c, i) => (
                 <ConnectionCard key={i} name={c.name} description={c.description} onClickAdd={openSourceDrawer} />
               ))}
@@ -102,8 +81,8 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = ({ orgSlug
         <div id='messaging-system' className='data-source-section'>
           <div className='tabs-title'>Messaging System</div>
           <div className='sources-cards'>
-            {connections
-              .filter((c) => c.connType === "messaging")
+            {connections.connProviders
+              .filter((c) => c.category === "messaging")
               .map((c) => (
                 <ConnectionCard key={c.name} name={c.name} description={c.description} onClickAdd={openSourceDrawer} />
               ))}
@@ -111,13 +90,7 @@ const AddDatasource: FC<{ orgSlugId: string; workspaceId: number }> = ({ orgSlug
         </div>
       </div>
 
-      <ServiceConnectionBuilder
-        orgSlugId={orgSlugId}
-        workspaceId={workspaceId}
-        service={sourceDrawer.name}
-        isOpen={sourceDrawer.isOpen}
-        onClose={onCloseDrawer}
-      />
+      <ServiceConnectionBuilder service={sourceDrawer.name} isOpen={sourceDrawer.isOpen} onClose={onCloseDrawer} />
     </div>
   );
 };

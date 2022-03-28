@@ -86,8 +86,71 @@ lazy val models = (project in file("modules/common"))
   .settings(projectSettings)
   .settings(
     name := "gigahex-models",
-    moduleName := "gigahex-models"
+    moduleName := "gigahex-models",
+    libraryDependencies ++= Seq(
+      "org.scalikejdbc"            %% "scalikejdbc"                     % "3.3.5",
+    )
   )
+
+
+lazy val aws = (project in file("modules/aws"))
+  .settings(projectSettings)
+  .settings(
+    name := "gigahex-aws",
+    moduleName := "gigahex-aws",
+    libraryDependencies ++= Seq(
+      "com.amazonaws" % "aws-java-sdk-s3" % "1.12.180" withSources (),
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.2"
+    )
+  ).dependsOn(models)
+
+lazy val cassandra = (project in file("modules/cassandra"))
+  .settings(projectSettings)
+  .settings(
+    name := "gigahex-cassandra",
+    moduleName := "gigahex-cassandra",
+    libraryDependencies ++= Seq(
+      "com.datastax.oss" % "java-driver-core" % "4.14.0"
+    )
+  ).dependsOn(models)
+
+lazy val cockroachdb = (project in file("modules/cockroachdb"))
+  .settings(projectSettings)
+  .settings(
+    name := "gigahex-cockroachdb",
+    moduleName := "gigahex-cockroachdb"
+  ).dependsOn(postgres)
+
+
+lazy val postgres = (project in file("modules/postgres"))
+  .settings(projectSettings)
+  .settings(
+    name := "gigahex-postgres",
+    moduleName := "gigahex-postgres",
+    libraryDependencies ++= Seq(
+      "org.postgresql"             % "postgresql"                       % "42.2.16"
+    )
+  ).dependsOn(models)
+
+lazy val mysql = (project in file("modules/mysql"))
+  .settings(projectSettings)
+  .settings(
+    name := "gigahex-mysql",
+    moduleName := "gigahex-mysql",
+    libraryDependencies ++= Seq(
+      "mysql" % "mysql-connector-java" % "8.0.27"
+    )
+  ).dependsOn(models)
+
+lazy val mariadb = (project in file("modules/mariadb"))
+  .settings(projectSettings)
+  .settings(
+    name := "gigahex-mysql",
+    moduleName := "gigahex-mysql",
+    libraryDependencies ++= Seq(
+      "org.mariadb.jdbc" % "mariadb-java-client" % "3.0.3"
+    )
+  ).dependsOn(models)
 
 lazy val `gigahex-server`  = (project in file("server"))
   .settings(projectSettings)
@@ -137,5 +200,5 @@ lazy val `gigahex-server`  = (project in file("server"))
     )
   )
   .enablePlugins(PlayScala, DebianPlugin, JavaServerAppPackaging, SystemdPlugin)
-  .aggregate(models)
-  .dependsOn(models)
+  .aggregate(models, aws,postgres, mysql, mariadb, cassandra)
+  .dependsOn(models, aws, postgres, mysql, mariadb, cassandra)

@@ -51,7 +51,6 @@ class InstallationManager(downloadUrl: String, downloadDir: String, installPath:
   }
 
   def modifyConfig(relativePath: String)(handler: String => String): Unit = {
-    println(s"Modifying the file : ${installPath}${relativePath}")
     val path = s"${installPath}${relativePath}"
     val bufferedSource = Source.fromFile(path)
     val newLines = bufferedSource.getLines().map(handler).toSeq

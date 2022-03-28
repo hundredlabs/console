@@ -6,11 +6,18 @@
   overflow-x: hidden;
   .site-layout-background {
     overflow-y: auto;
-    background: $lt-card-bg;
+    background: var(--background-color);
+
+    & > div.ant-skeleton {
+      padding: 20px;
+    }
 
     .workspace-content-header {
       height: 52px;
       padding: 15px 20px 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       background: $lt-card-bg;
       img {
         height: 20px;
@@ -273,7 +280,7 @@
   }
   :not(li.ant-menu-item-active) {
     i {
-      color: $lt-card-border;
+      color: $lt-font-dull-color;
     }
   }
   li.ant-menu-item-active {

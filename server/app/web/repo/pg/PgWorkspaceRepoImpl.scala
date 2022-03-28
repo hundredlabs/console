@@ -4,7 +4,7 @@ import com.goterl.lazycode.lazysodium.utils.KeyPair
 import javax.inject.Inject
 import web.models.{WorkspaceAPIKey, WorkspaceId}
 import web.models.rbac.{AccessRoles, MemberProfile, SubjectType, Theme}
-import web.models.requests.{ConnectionView, CreateOrgWorkspace, WorkspaceConnection, WorkspaceView}
+import web.models.requests.{ConnectionProvider, ConnectionView, CreateOrgWorkspace, WorkspaceConnection, WorkspaceView}
 import web.repo.WorkspaceRepo
 import web.services.{DefaultKeyPairGenerator, SecretStore}
 import web.utils.DateUtil
@@ -209,6 +209,25 @@ class PgWorkspaceRepoImpl @Inject()(blockingEC: ExecutionContext) extends Worksp
     }
   }
 
+  override def listConnectionProviders(): Future[Either[Throwable, List[ConnectionProvider]]] = Future {
+    blocking {
+      Try {
+        DB localTx { implicit session =>
+          sql"""SELECT name, description, category FROM connection_providers"""
+            .map{ row =>
+              ConnectionProvider(name = row.string("name"),
+                description = row.string("description"),
+                category = row.string("category"))
+            }
+            .list()
+            .apply()
+        }
+      }.toEither
+    }
+  }
+
+
+
   override def updateConnection(workspaceId: Long, connectionId: Long, connection: WorkspaceConnection): Future[Either[Throwable, Boolean]] = Future {
     blocking {
       Try {
@@ -227,7 +246,9 @@ class PgWorkspaceRepoImpl @Inject()(blockingEC: ExecutionContext) extends Worksp
     blocking {
       Try {
         DB localTx { implicit session =>
-          sql"""SELECT id, name, connection_provider, connection_schema_ver, dt_created FROM connections WHERE
+          sql"""SELECT id, c.name, connection_provider, connection_schema_ver, cp.category, dt_created FROM connections as c
+                INNER JOIN connection_providers as cp ON c.connection_provider = cp.name
+                WHERE
                 workspace_id = ${workspaceId}
              """
             .map{ row =>
@@ -235,6 +256,7 @@ class PgWorkspaceRepoImpl @Inject()(blockingEC: ExecutionContext) extends Worksp
                 name = row.string("name"),
                 schemaVersion = row.string("connection_schema_ver"),
                 provider = row.string("connection_provider"),
+                providerCategory = row.string("category"),
                 dateCreated = row.dateTime("dt_created").toEpochSecond)
             }
             .list()
@@ -252,6 +274,25 @@ class PgWorkspaceRepoImpl @Inject()(blockingEC: ExecutionContext) extends Worksp
              """
             .update()
             .apply() > 0
+        }
+      }.toEither
+    }
+  }
+
+  override def getConnection(workspaceId: Long, connectionId: Long): Future[Either[Throwable, Option[WorkspaceConnection]]] = Future {
+    blocking {
+      Try {
+        DB localTx { implicit session =>
+          sql"""SELECT name, connection_provider, properties, connection_schema_ver
+                 FROM connections WHERE workspace_id = ${workspaceId} AND id = ${connectionId}
+             """
+            .map{ row =>
+              WorkspaceConnection(name = row.string("name"),
+                encProperties = row.string("properties"),
+                provider = row.string("connection_provider"),
+                schemaVersion = row.int("connection_schema_ver")
+              )
+            }.single().apply()
         }
       }.toEither
     }

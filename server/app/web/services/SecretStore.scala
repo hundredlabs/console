@@ -138,6 +138,13 @@ class SecretStore @Inject()(
     }
   }
 
+  def getWorkspacePublicKey(workspaceId: Long, cache: SyncCacheApi): Future[Option[String]] =
+    Future {
+      blocking{
+        getWorkspaceKeyPair(workspaceId, cache).map(_.getPublicKey.getAsHexString)
+      }
+    }
+
   def getWorkspaceKeyPair(workspaceId: Long, workspaceKeyPairs: SyncCacheApi): Option[KeyPair] =
     workspaceKeyPairs.getOrElseUpdate(workspaceId.toString) {
       DB readOnly { implicit session =>
@@ -152,6 +159,12 @@ class SecretStore @Inject()(
           }
       }
     }
+
+  def decryptText(cipherText: String, workspaceId: Long, keyPairCache: SyncCacheApi) : Option[String] = {
+    getWorkspaceKeyPair(workspaceId, keyPairCache).map { kp =>
+      decrypt(cipherText, kp)
+    }
+  }
 
   def getAWSKey(keyId: Long, cipherAWSKey: String, cipherAWSSecretKey: String): Future[Option[(String, String)]] = Future {
     blocking {

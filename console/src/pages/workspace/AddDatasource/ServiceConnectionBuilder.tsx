@@ -5,15 +5,22 @@ import Workspace from "../../../services/Workspace";
 import { useForm } from "antd/lib/form/Form";
 import { AddConnectionProvider } from "./ConnectionProvider";
 import { ConnectionConfig } from "../../../components/connections/ConnectionConfig";
-const _sodium = require("libsodium-wrappers");
+import Connections from "../../../services/Connections";
+
+const connectionRegistry = {
+  S3: "com.gigahex.services.AWSS3Connection",
+  Postgres: "com.gigahex.services.PgConnection",
+  MySQL: "com.gigahex.services.MySQLConnection",
+  MariaDB: "com.gigahex.services.MariaDBConnection",
+};
 
 const ServiceConnectionBuilder: React.FC<{
   service: string;
-  orgSlugId: string;
-  workspaceId: number;
   isOpen: boolean;
   onClose: () => void;
-}> = ({ service, orgSlugId, workspaceId, isOpen, onClose }) => {
+  connectionId?: number;
+  initialValues?: any;
+}> = ({ service, isOpen, connectionId, onClose, initialValues }) => {
   const [builderForm] = useForm();
   const serviceOpt = ["spark", "kafka", "hadoop"];
   const [builder, setBuilder] = useState<{
@@ -23,13 +30,18 @@ const ServiceConnectionBuilder: React.FC<{
   });
 
   const onFinish = (values: any) => {
-    values["_type"] = "com.gigahex.services.AWSS3Connection";
-
-    Workspace.saveConnection(values["name"], "S3", JSON.stringify(values), 1, (r) => {
-      console.log(`connection id - ${r}`);
-      message.success(`Connection with name ${values["name"]} has been saved`);
-      onClose();
-    });
+    values["_type"] = connectionRegistry[service];
+    if (connectionId) {
+      Connections.updateConnection(connectionId, values["name"], service, JSON.stringify(values), 1, (r) => {
+        message.success(`Connection has been saved`);
+        onClose();
+      });
+    } else {
+      Connections.saveConnection(values["name"], service, JSON.stringify(values), 1, (r) => {
+        message.success(`Connection has been saved`);
+        onClose();
+      });
+    }
 
     console.log(values);
   };
@@ -58,15 +70,10 @@ const ServiceConnectionBuilder: React.FC<{
         name='basic'
         requiredMark={false}
         form={builderForm}
-        initialValues={{ _type: "com.gigahex.services.AWSS3Connection", schemaVersion: 1 }}
+        initialValues={initialValues}
         onFinish={onFinish}
         className='config-deploy-form wizard-form'>
-        <AddConnectionProvider
-          service={service.toLowerCase()}
-          connectionForm={builderForm}
-          orgSlugId={orgSlugId}
-          workspaceId={workspaceId}
-        />
+        <AddConnectionProvider service={service.toLowerCase()} connectionForm={builderForm} />
       </Form>
     </Drawer>
   );
