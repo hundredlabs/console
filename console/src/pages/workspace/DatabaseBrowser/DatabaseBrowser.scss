@@ -1,0 +1,135 @@
+@import "../../../variables.scss";
+
+.database-browser-wrapper {
+  max-height: 100vh;
+  overflow: hidden;
+  .db-browser-header {
+    border-bottom: 1px solid $lt-card-border;
+    display: flex;
+    .left-container {
+      padding: 12px 15px;
+      border-right: 1px solid $lt-card-border;
+      width: 231px;
+      .db-icon {
+        color: $lt-font-color;
+      }
+      .db-label {
+        font-weight: 500;
+        color: $lt-font-color;
+      }
+    }
+    .right-container {
+      padding: 12px 15px;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      .query-file-name {
+        font-weight: 400;
+        color: $lt-font-color;
+      }
+      .ant-btn-icon-only {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .query-save-btn,
+      .query-run-btn {
+        .ant-btn {
+          font-size: 12px;
+        }
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+  .db-info-container {
+    display: flex;
+    .db-list-container {
+      border-right: 1px solid $lt-card-border;
+      height: 100%;
+      .db-menu {
+        width: 200px;
+      }
+      .ant-menu-submenu:last-child {
+        margin-bottom: 55px;
+      }
+      :not(li.ant-menu-item-active) i {
+        color: #e4e5f1;
+        display: flex;
+      }
+      .ant-menu-sub {
+        .ant-menu-item {
+          padding-left: 30px !important;
+        }
+      }
+      .ant-menu-item {
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+      }
+      .ant-menu-sub.ant-menu-inline > .ant-menu-item {
+        height: 30px;
+        line-height: 30px;
+      }
+    }
+  }
+
+  .query-container {
+    width: 100%;
+    .query-editor {
+      width: 100%;
+    }
+    .query-result-table {
+      border-top: 1px solid $lt-card-border;
+      width: 100%;
+      .ant-card-head {
+        padding: 0 15px;
+        min-height: 35px;
+        .ant-card-head-title {
+          font-size: 14px;
+          color: $lt-font-color;
+          padding: 10px 0;
+        }
+        .ant-card-extra {
+          padding: 0;
+        }
+        .query-result-export-btn {
+          display: flex;
+          align-items: center;
+          font-weight: 400;
+          color: $lt-font-color;
+        }
+      }
+      .ant-card-body {
+        border-top: 1px solid $lt-card-border;
+        padding: 0;
+      }
+    }
+  }
+}
+
+.save-query-modal {
+  .query-file-name {
+    margin-bottom: 8px;
+  }
+
+  .select-folder-container {
+    width: 100%;
+    height: 200px;
+    margin-top: 20px;
+    border: 1px solid $lt-card-border;
+    overflow: auto;
+  }
+  .footer-btns {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  .folder-tree-container {
+    .ant-tree-node-content-wrapper {
+      display: flex;
+    }
+  }
+}
