@@ -7,7 +7,7 @@ import web.utils.MetricConverter
 import org.apache.kafka.clients.admin.TopicDescription
 import play.api.libs.json.Json
 
-import scala.jdk.CollectionConverters._
+
 
 case class KafkaConfigurationRequest(name: String,
                                      version: String,

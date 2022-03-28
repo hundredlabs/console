@@ -6,13 +6,14 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.mohiva.play.silhouette.api.actions.UserAwareRequest
 import com.mohiva.play.silhouette.api.{Env, HandlerResult, Silhouette}
 import play.api.cache.SyncCacheApi
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, Json, Reads}
 import play.api.mvc._
 import utils.auth.DefaultEnv
 import web.models.{JobValue, MemberValue, UserNotAuthenticated}
 import web.models.formats.AuthResponseFormats
 import web.models.rbac.{AccessPolicy, MemberProfile, MemberRole, SubjectType}
 import web.services.MemberService
+import play.api.libs.json._
 
 import scala.concurrent.{ExecutionContext, Future}
 

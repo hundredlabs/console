@@ -1,5 +1,6 @@
 package web.services
 
+import com.gigahex.services.ServiceConnection
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.services.IdentityService
@@ -8,7 +9,7 @@ import web.models.WorkspaceId
 import web.repo.{LoginInfoRepo, MemberRepository, WorkspaceRepo}
 import play.api.cache.SyncCacheApi
 import play.cache.NamedCache
-import web.models.requests.{ConnectionView, WorkspaceConnection, WorkspaceView}
+import web.models.requests.{ConnectionProvider, ConnectionView, WorkspaceConnection, WorkspaceView}
 
 import scala.concurrent.Future
 
@@ -20,11 +21,15 @@ trait WorkspaceService extends IdentityService[WorkspaceId] {
 
   def addConnection(workspaceId: Long, connection: WorkspaceConnection): Future[Either[Throwable, Long]]
 
+  def listConnectionProviders(): Future[Either[Throwable, List[ConnectionProvider]]]
+
   def updateConnection(workspaceId: Long, connectionId: Long, connection: WorkspaceConnection): Future[Either[Throwable, Boolean]]
 
   def listConnections(workspaceId: Long): Future[Either[Throwable, Seq[ConnectionView]]]
 
   def deleteConnection(workspaceId: Long, connectionId: Long): Future[Either[Throwable, Boolean]]
+
+  def getConnection(workspaceId: Long, connectionId: Long): Future[Either[Throwable, Option[WorkspaceConnection]]]
 
 }
 
@@ -44,6 +49,9 @@ class WorkspaceServiceImpl @Inject()(memberRepository: MemberRepository,
   override def addConnection(workspaceId: Long, connection: WorkspaceConnection): Future[Either[Throwable, Long]] =
     workspaceRepo.addConnection(workspaceId, connection)
 
+  override def listConnectionProviders(): Future[Either[Throwable, List[ConnectionProvider]]] =
+    workspaceRepo.listConnectionProviders()
+
   override def updateConnection(workspaceId: Long, connectionId: Long, connection: WorkspaceConnection): Future[Either[Throwable, Boolean]] =
     workspaceRepo.updateConnection(workspaceId, connectionId, connection)
 
@@ -52,5 +60,8 @@ class WorkspaceServiceImpl @Inject()(memberRepository: MemberRepository,
 
   override def deleteConnection(workspaceId: Long, connectionId: Long): Future[Either[Throwable, Boolean]] =
     workspaceRepo.deleteConnection(workspaceId, connectionId)
+
+  override def getConnection(workspaceId: Long, connectionId: Long): Future[Either[Throwable, Option[WorkspaceConnection]]] =
+    workspaceRepo.getConnection(workspaceId, connectionId)
 
 }

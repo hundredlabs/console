@@ -66,9 +66,16 @@ const routes = (
         render={(props) => <WorkspaceMain index='10' slugId={props.match.params.slugId} content={<HostsList />} {...props} />}
       />
       <Route
-        path='/:slugId/workspace/:workspaceId/s3'
+        path='/:slugId/workspace/:workspaceId/fs/:connectionId'
         exact
-        render={(props) => <WorkspaceMain index='10' slugId={props.match.params.slugId} content={<FileManager />} {...props} />}
+        render={(props) => (
+          <WorkspaceMain
+            index='10'
+            slugId={props.match.params.slugId}
+            content={<FileManager connectionId={Number(props.match.params.connectionId)} />}
+            {...props}
+          />
+        )}
       />
       <Route
         path='/:slugId/settings'

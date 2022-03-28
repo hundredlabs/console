@@ -33,6 +33,10 @@ const UserApp: React.FC = ({ children }) => {
       AuthService.accountInfo().then((account) => {
         if (account.exist) {
           const member = account as MemberInfo;
+          if (member.profile) {
+            document.documentElement.setAttribute("data-theme", member.profile.webTheme);
+          }
+
           updateUser(member.id, member.name, member.email, true, member.profile);
         } else {
           if (!location.pathname.includes("oauth") && !location.pathname.includes("login")) {
