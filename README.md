@@ -13,7 +13,7 @@ local development and testing.
 
 [![Gigahex Data Infrastructure Platform](assets/build-spark.png)](https://gigahex.com)
 
-## Main Features
+### Main Features 
 - Visually build and deploy Spark, Kafka and HDFS Clusters
 - View Spark applications and easily navigate to the Spark History Web UI
 - View Kafka topics and messages
